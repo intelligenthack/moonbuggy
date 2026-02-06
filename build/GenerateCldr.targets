@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    MSBuild target to regenerate CLDR plural rules from plurals.json.
+    Usage: dotnet msbuild -t:GenerateCldr
+    Requires: dotnet tool restore (installs dotnet-script)
+  -->
+  <PropertyGroup>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</RepoRoot>
+  </PropertyGroup>
+  <Target Name="GenerateCldr">
+    <Exec Command="dotnet tool restore" WorkingDirectory="$(RepoRoot)" />
+    <Exec Command="dotnet script build/cldr/generate-plural-rules.csx" WorkingDirectory="$(RepoRoot)" />
+  </Target>
+</Project>
