@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/MoonBuggy.Core/MoonBuggy.Core.csproj" />
+    <Project Path="src/MoonBuggy.Cli/MoonBuggy.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MoonBuggy.Tests/MoonBuggy.Tests.csproj" />
+    <Project Path="tests/MoonBuggy.Cli.Tests/MoonBuggy.Cli.Tests.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>MoonBuggy.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>moonbuggy</ToolCommandName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MoonBuggy.Core\MoonBuggy.Core.csproj" />
+  </ItemGroup>
+</Project>
