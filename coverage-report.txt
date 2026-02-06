@@ -1,0 +1,29 @@
+Summary
+  Generated on: 02/06/2026 - 15:48:22
+  Coverage date: 02/06/2026 - 15:47:58
+  Parser: Cobertura
+  Assemblies: 1
+  Classes: 7
+  Files: 3
+  Line coverage: 96%
+  Covered lines: 316
+  Uncovered lines: 13
+  Coverable lines: 329
+  Total lines: 463
+  Branch coverage: 85.9% (141 of 164)
+  Covered branches: 141
+  Total branches: 164
+  Method coverage: 100% (20 of 20)
+  Full method coverage: 80% (16 of 20)
+  Covered methods: 20
+  Fully covered methods: 16
+  Total methods: 20
+
+MoonBuggy.Core                                 96%
+  MoonBuggy.Core.Icu.IcuTransformer           100%
+  MoonBuggy.Core.Parsing.MbParser            95.4%
+  MoonBuggy.Core.Parsing.PluralBlockToken     100%
+  MoonBuggy.Core.Parsing.PluralForm           100%
+  MoonBuggy.Core.Parsing.PluralSelectorRef    100%
+  MoonBuggy.Core.Parsing.TextToken            100%
+  MoonBuggy.Core.Parsing.VariableToken        100%
