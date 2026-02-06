@@ -1,5 +1,10 @@
 # MoonBuggy
 
+<p align="center">
+  <img src="docs/moonbuggy.jpg" alt="Lunar Roving Vehicle" width="480"><br>
+  <sub>August 1, 1971. Courtesy NASA.</sub>
+</p>
+
 MoonBuggy performs compile-time translation for .NET applications. You write Razor views in English using a lightweight translation syntax, send PO files to translators, and during the build the compiler embeds every translated string directly into the binary. There are no resource files, dictionary lookups, or per-request allocations involved. The application writes the correct language directly to the output stream.
 
 If your stack includes both Razor views and a JavaScript frontend, MoonBuggy can share PO files with Lingui.js. This allows you to maintain a single set of translation files for both server and client.
