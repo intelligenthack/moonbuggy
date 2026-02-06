@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/MoonBuggy.Core/MoonBuggy.Core.csproj" />
     <Project Path="src/MoonBuggy.Cli/MoonBuggy.Cli.csproj" />
+    <Project Path="src/MoonBuggy/MoonBuggy.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MoonBuggy.Tests/MoonBuggy.Tests.csproj" />

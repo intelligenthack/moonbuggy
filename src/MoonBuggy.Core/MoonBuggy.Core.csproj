@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="MoonBuggy.Tests" />
+    <InternalsVisibleTo Include="MoonBuggy" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.38.0" />
