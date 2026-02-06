@@ -4,6 +4,7 @@
     <RootNamespace>MoonBuggy.Core</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.38.0" />
     <PackageReference Include="System.Text.Json" Version="9.0.1" />
   </ItemGroup>
 </Project>

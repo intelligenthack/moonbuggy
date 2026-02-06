@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using MoonBuggy.Core.Config;
 using MoonBuggy.Core.Icu;
+using MoonBuggy.Core.Markdown;
 using MoonBuggy.Core.Po;
 
 namespace MoonBuggy.Cli.Commands;
@@ -30,7 +31,9 @@ public static class ExtractCommand
             var icuMessages = new List<(string MsgId, string? MsgCtxt, string FilePath, int LineNumber)>();
             foreach (var msg in messages)
             {
-                var icuMsgId = IcuTransformer.ToIcu(msg.MbSyntax);
+                var icuMsgId = msg.IsMarkdown
+                    ? MarkdownPlaceholderExtractor.ToIcuWithMarkdown(msg.MbSyntax)
+                    : IcuTransformer.ToIcu(msg.MbSyntax);
                 icuMessages.Add((icuMsgId, msg.Context, msg.FilePath, msg.LineNumber));
             }
 

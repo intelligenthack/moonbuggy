@@ -172,6 +172,19 @@ var b = _t(""Submit"", context: ""menu"");");
     }
 
     [Fact]
+    public void Execute_MCall_MarkdownTransformed()
+    {
+        WriteSourceFile("src/App.cs", @"var x = _m(""Click **here**"");");
+
+        var config = MakeConfig("es");
+        ExtractCommand.Execute(config, _tempDir);
+
+        var catalog = PoReader.Read(ReadPoFile("locales/es/messages.po"));
+        var entry = catalog.Entries[0];
+        Assert.Equal("Click <0>here</0>", entry.MsgId);
+    }
+
+    [Fact]
     public void Execute_ReturnsCorrectStatistics()
     {
         WriteSourceFile("src/App.cs",

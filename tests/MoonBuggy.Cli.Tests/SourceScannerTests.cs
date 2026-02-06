@@ -104,15 +104,30 @@ var d = _t(""Third"");";
     }
 
     [Fact]
-    public void ScanText_IgnoresMCalls()
+    public void ScanText_MCall_ExtractsWithMarkdownFlag()
+    {
+        var source = @"var x = _m(""Click **here**"");";
+
+        var results = SourceScanner.ScanText(source, "test.cs");
+
+        var msg = Assert.Single(results);
+        Assert.Equal("Click **here**", msg.MbSyntax);
+        Assert.True(msg.IsMarkdown);
+    }
+
+    [Fact]
+    public void ScanText_MixedCalls_BothExtracted()
     {
         var source = @"var a = _m(""bold"");
 var b = _t(""plain"");";
 
         var results = SourceScanner.ScanText(source, "test.cs");
 
-        var msg = Assert.Single(results);
-        Assert.Equal("plain", msg.MbSyntax);
+        Assert.Equal(2, results.Count);
+        Assert.Equal("bold", results[0].MbSyntax);
+        Assert.True(results[0].IsMarkdown);
+        Assert.Equal("plain", results[1].MbSyntax);
+        Assert.False(results[1].IsMarkdown);
     }
 
     [Fact]

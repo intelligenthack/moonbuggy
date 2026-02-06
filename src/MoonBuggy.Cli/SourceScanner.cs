@@ -7,13 +7,14 @@ using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 namespace MoonBuggy.Cli;
 
 public record ExtractedMessage(
-    string MbSyntax, string? Context, string FilePath, int LineNumber);
+    string MbSyntax, string? Context, string FilePath, int LineNumber,
+    bool IsMarkdown = false);
 
 public static class SourceScanner
 {
-    // Match _t( but not _tm( or other prefixed variants — require non-word char or start before _t
+    // Match _t( or _m( but not other prefixed variants — require non-word char or start before _t/_m
     private static readonly Regex CallPattern = new Regex(
-        @"(?<!\w)_t\s*\(",
+        @"(?<!\w)_([tm])\s*\(",
         RegexOptions.Compiled);
 
     public static IReadOnlyList<ExtractedMessage> ScanText(string sourceText, string filePath)
@@ -34,6 +35,7 @@ public static class SourceScanner
         {
             var parenStart = match.Index + match.Length - 1; // position of '('
             var lineNumber = GetLineNumber(lineOffsets, match.Index);
+            var isMarkdown = match.Groups[1].Value == "m";
 
             var argContent = ExtractArgList(sourceText, parenStart);
             if (argContent == null)
@@ -44,7 +46,7 @@ public static class SourceScanner
                 continue;
 
             results.Add(new ExtractedMessage(
-                parsed.Value.Message, parsed.Value.Context, filePath, lineNumber));
+                parsed.Value.Message, parsed.Value.Context, filePath, lineNumber, isMarkdown));
         }
 
         return results;
