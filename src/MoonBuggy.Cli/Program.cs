@@ -14,8 +14,7 @@ switch (command)
     case "extract":
         return RunExtract(args.Skip(1).ToArray());
     case "validate":
-        Console.Error.WriteLine("Error: 'validate' command is not yet implemented.");
-        return 1;
+        return RunValidate(args.Skip(1).ToArray());
     default:
         Console.Error.WriteLine($"Error: Unknown command '{command}'.");
         PrintUsage();
@@ -83,6 +82,88 @@ int RunExtract(string[] flags)
     return 0;
 }
 
+int RunValidate(string[] flags)
+{
+    var strict = flags.Contains("--strict");
+    var verbose = flags.Contains("--verbose") || flags.Contains("-v");
+    string? localeFilter = null;
+    for (var i = 0; i < flags.Length; i++)
+    {
+        if (flags[i] == "--locale" && i + 1 < flags.Length)
+        {
+            localeFilter = flags[i + 1];
+            break;
+        }
+    }
+
+    var configPath = FindConfigFile();
+    if (configPath == null)
+    {
+        Console.Error.WriteLine("Error: Could not find moonbuggy.config.json in current or parent directories.");
+        return 1;
+    }
+
+    var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(configPath))!;
+
+    MoonBuggyConfig config;
+    try
+    {
+        config = MoonBuggyConfig.Load(configPath);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Error reading config: {ex.Message}");
+        return 1;
+    }
+
+    if (config.Locales.Count == 0)
+    {
+        Console.Error.WriteLine("Error: No locales configured in moonbuggy.config.json.");
+        return 1;
+    }
+
+    if (config.Catalogs.Count == 0)
+    {
+        Console.Error.WriteLine("Error: No catalogs configured in moonbuggy.config.json.");
+        return 1;
+    }
+
+    if (verbose)
+    {
+        Console.WriteLine($"Config: {configPath}");
+        Console.WriteLine($"Locales: {string.Join(", ", localeFilter != null ? new[] { localeFilter } : config.Locales.ToArray())}");
+        Console.WriteLine($"Strict: {strict}");
+        Console.WriteLine();
+    }
+
+    var results = ValidateCommand.Execute(config, baseDirectory, strict, localeFilter);
+
+    var hasErrors = false;
+    foreach (var (path, result) in results.OrderBy(r => r.Key))
+    {
+        if (verbose || result.Errors.Count > 0)
+        {
+            Console.WriteLine($"{path}: {result.TotalEntries} entries, {result.MissingCount} untranslated");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            Console.Error.WriteLine($"  ERROR: {error}");
+            hasErrors = true;
+        }
+    }
+
+    if (hasErrors)
+    {
+        Console.Error.WriteLine();
+        Console.Error.WriteLine("Validation failed.");
+        return 1;
+    }
+
+    Console.WriteLine("Validation passed.");
+    return 0;
+}
+
 string? FindConfigFile()
 {
     var dir = Directory.GetCurrentDirectory();
@@ -102,9 +183,14 @@ void PrintUsage()
     Console.WriteLine();
     Console.WriteLine("Commands:");
     Console.WriteLine("  extract    Scan source files and update PO catalogs");
-    Console.WriteLine("  validate   Validate PO catalogs against source (not yet implemented)");
+    Console.WriteLine("  validate   Validate PO catalogs for correctness");
     Console.WriteLine();
     Console.WriteLine("Extract options:");
     Console.WriteLine("  --clean    Remove obsolete entries from PO files");
     Console.WriteLine("  --verbose  Print detailed output");
+    Console.WriteLine();
+    Console.WriteLine("Validate options:");
+    Console.WriteLine("  --strict           Fail on missing translations");
+    Console.WriteLine("  --locale <locale>  Validate only the specified locale");
+    Console.WriteLine("  --verbose          Print detailed output");
 }

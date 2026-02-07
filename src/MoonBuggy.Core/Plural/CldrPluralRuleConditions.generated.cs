@@ -208,5 +208,20 @@ namespace MoonBuggy.Core.Plural
                 return condition;
             return null;
         }
+
+        internal static IEnumerable<PluralCategory> GetRequiredCategories(string locale)
+        {
+            if (_conditions.TryGetValue(locale, out var cats))
+            {
+                foreach (var cat in cats.Keys)
+                    yield return cat;
+            }
+            yield return PluralCategory.Other;
+        }
+
+        internal static bool HasLocale(string locale)
+        {
+            return _conditions.ContainsKey(locale);
+        }
     }
 }
