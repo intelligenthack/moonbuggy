@@ -5,8 +5,13 @@
     <Project Path="src/MoonBuggy/MoonBuggy.csproj" />
     <Project Path="src/MoonBuggy.SourceGenerator/MoonBuggy.SourceGenerator.csproj" />
   </Folder>
+  <Folder Name="/build/">
+    <Project Path="build/MoonBuggy.CldrGen/MoonBuggy.CldrGen.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MoonBuggy.Tests/MoonBuggy.Tests.csproj" />
+    <Project Path="tests/MoonBuggy.Core.Tests/MoonBuggy.Core.Tests.csproj" />
+    <Project Path="tests/MoonBuggy.CldrGen.Tests/MoonBuggy.CldrGen.Tests.csproj" />
     <Project Path="tests/MoonBuggy.Cli.Tests/MoonBuggy.Cli.Tests.csproj" />
     <Project Path="tests/MoonBuggy.SourceGenerator.Tests/MoonBuggy.SourceGenerator.Tests.csproj" />
   </Folder>

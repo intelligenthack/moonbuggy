@@ -9,6 +9,7 @@
   </PropertyGroup>
   <Target Name="GenerateCldr">
     <Exec Command="dotnet tool restore" WorkingDirectory="$(RepoRoot)" />
+    <Exec Command="dotnet build build/MoonBuggy.CldrGen" WorkingDirectory="$(RepoRoot)" />
     <Exec Command="dotnet script build/cldr/generate-plural-rules.csx" WorkingDirectory="$(RepoRoot)" />
   </Target>
 </Project>

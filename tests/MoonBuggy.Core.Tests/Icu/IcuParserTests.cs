@@ -1,7 +1,7 @@
 using MoonBuggy.Core.Icu;
 using MoonBuggy.Core.Parsing;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.Core.Tests.Icu;
 
 public class IcuParserTests
 {

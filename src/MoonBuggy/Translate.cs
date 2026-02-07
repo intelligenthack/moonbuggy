@@ -1,13 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Html;
-using MoonBuggy.Core.Parsing;
 
 namespace MoonBuggy;
 
 /// <summary>
 /// Translation entry points. Consumed via <c>using static MoonBuggy.Translate;</c>.
-/// Method bodies provide runtime fallback behavior (source-locale only).
-/// When the source generator is active, interceptors bypass these entirely.
+/// Method bodies throw at runtime — the source generator emits interceptors
+/// that bypass these entirely. If no interceptor is active, the throw surfaces
+/// a clear error instead of silently falling back to source-locale rendering.
 /// </summary>
 public static class Translate
 {
@@ -16,8 +16,8 @@ public static class Translate
         object? args = null,
         [ConstantExpected] string? context = null)
     {
-        var tokens = MbParser.Parse(message);
-        return MbRenderer.Render(tokens, args);
+        throw new InvalidOperationException(
+            "MoonBuggy source generator is not active. Add the MoonBuggy.SourceGenerator package to your project.");
     }
 
     public static IHtmlContent _m(
@@ -25,8 +25,7 @@ public static class Translate
         object? args = null,
         [ConstantExpected] string? context = null)
     {
-        var tokens = MbParser.Parse(message);
-        var html = MbRenderer.RenderMarkdown(tokens, args);
-        return new HtmlString(html);
+        throw new InvalidOperationException(
+            "MoonBuggy source generator is not active. Add the MoonBuggy.SourceGenerator package to your project.");
     }
 }

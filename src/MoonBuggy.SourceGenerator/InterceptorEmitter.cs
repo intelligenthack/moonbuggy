@@ -259,12 +259,11 @@ internal static class InterceptorEmitter
     {
         var prefixNodes = nodes.Take(pluralIndex).ToArray();
         var suffixNodes = nodes.Skip(pluralIndex + 1).ToArray();
-        var categories = GetLocaleCategories(locale);
         var varName = $"__{plural.Variable}";
 
         foreach (var branch in plural.Branches)
         {
-            var condition = GetCategoryCondition(branch.Category, varName, locale, categories);
+            var condition = GetCategoryCondition(branch.Category, varName, locale);
             if (condition != null)
             {
                 sb.AppendLine($"{indent}if ({condition})");
@@ -286,12 +285,11 @@ internal static class InterceptorEmitter
         var first = plurals[0];
         var prefixNodes = nodes.Take(first.Index).ToArray();
         var suffixNodes = nodes.Skip(first.Index + 1).ToArray();
-        var categories = GetLocaleCategories(locale);
         var varName = $"__{first.Plural.Variable}";
 
         foreach (var branch in first.Plural.Branches)
         {
-            var condition = GetCategoryCondition(branch.Category, varName, locale, categories);
+            var condition = GetCategoryCondition(branch.Category, varName, locale);
             if (condition != null)
             {
                 sb.AppendLine($"{indent}if ({condition})");
@@ -317,15 +315,8 @@ internal static class InterceptorEmitter
         return result.ToArray();
     }
 
-    private static PluralCategory[] GetLocaleCategories(string locale)
-    {
-        var lang = locale.Contains("-") ? locale.Split('-')[0] : locale;
-        return CldrPluralCategories.GetCategories(lang)
-               ?? new[] { PluralCategory.One, PluralCategory.Other };
-    }
-
     private static string? GetCategoryCondition(
-        string icuCategory, string varName, string locale, PluralCategory[] categories)
+        string icuCategory, string varName, string locale)
     {
         if (icuCategory.StartsWith("="))
         {

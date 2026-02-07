@@ -3,14 +3,14 @@
 
 using System.Collections.Generic;
 
-namespace MoonBuggy.Core.Plural
+namespace MoonBuggy.CldrGen.Plural
 {
     /// <summary>
     /// AST nodes for CLDR plural rule conditions.
     /// Grammar: condition = or_condition; or_condition = and_condition ("or" and_condition)*;
     /// and_condition = relation ("and" relation)*; relation = expr ("=" | "!=") range_list
     /// </summary>
-    internal sealed class OrExpr
+    public sealed class OrExpr
     {
         public List<AndExpr> Branches { get; }
 
@@ -20,7 +20,7 @@ namespace MoonBuggy.Core.Plural
         }
     }
 
-    internal sealed class AndExpr
+    public sealed class AndExpr
     {
         public List<Relation> Relations { get; }
 
@@ -30,7 +30,7 @@ namespace MoonBuggy.Core.Plural
         }
     }
 
-    internal sealed class Relation
+    public sealed class Relation
     {
         public string Operand { get; }      // n, i, v, w, f, t, e
         public int? Modulus { get; }         // null if no % operator
@@ -46,7 +46,7 @@ namespace MoonBuggy.Core.Plural
         }
     }
 
-    internal sealed class RangeValue
+    public sealed class RangeValue
     {
         public long Low { get; }
         public long High { get; }  // same as Low for single values

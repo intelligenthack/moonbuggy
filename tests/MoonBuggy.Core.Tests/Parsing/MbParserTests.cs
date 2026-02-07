@@ -1,6 +1,6 @@
 using MoonBuggy.Core.Parsing;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.Core.Tests.Parsing;
 
 public class MbParserTests
 {

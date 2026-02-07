@@ -1,6 +1,6 @@
 using MoonBuggy.Core.Markdown;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.Core.Tests.Markdown;
 
 public class MarkdownIcuTransformTests
 {

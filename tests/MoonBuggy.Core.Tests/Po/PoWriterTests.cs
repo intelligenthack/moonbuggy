@@ -1,6 +1,6 @@
 using MoonBuggy.Core.Po;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.Core.Tests.Po;
 
 public class PoWriterTests
 {

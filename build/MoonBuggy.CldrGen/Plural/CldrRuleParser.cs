@@ -4,13 +4,13 @@
 using System;
 using System.Collections.Generic;
 
-namespace MoonBuggy.Core.Plural
+namespace MoonBuggy.CldrGen.Plural
 {
     /// <summary>
     /// Parses CLDR plural rule condition strings into an AST.
     /// Input is the condition part only (before @integer/@decimal samples).
     /// </summary>
-    internal static class CldrRuleParser
+    public static class CldrRuleParser
     {
         public static OrExpr? Parse(string condition)
         {

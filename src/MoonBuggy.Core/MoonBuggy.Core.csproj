@@ -4,7 +4,7 @@
     <RootNamespace>MoonBuggy.Core</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="MoonBuggy.Tests" />
+    <InternalsVisibleTo Include="MoonBuggy.Core.Tests" />
     <InternalsVisibleTo Include="MoonBuggy" />
     <InternalsVisibleTo Include="MoonBuggy.SourceGenerator" />
   </ItemGroup>

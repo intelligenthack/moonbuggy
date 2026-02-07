@@ -1,6 +1,6 @@
 using MoonBuggy.Core.Icu;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.Core.Tests.Icu;
 
 public class IcuTransformerTests
 {

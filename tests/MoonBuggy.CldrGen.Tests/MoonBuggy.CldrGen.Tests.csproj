@@ -17,6 +17,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MoonBuggy\MoonBuggy.csproj" />
+    <ProjectReference Include="..\..\build\MoonBuggy.CldrGen\MoonBuggy.CldrGen.csproj" />
   </ItemGroup>
 </Project>

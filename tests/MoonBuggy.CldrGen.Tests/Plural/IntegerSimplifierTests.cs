@@ -1,6 +1,6 @@
-using MoonBuggy.Core.Plural;
+using MoonBuggy.CldrGen.Plural;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.CldrGen.Tests.Plural;
 
 public class IntegerSimplifierTests
 {

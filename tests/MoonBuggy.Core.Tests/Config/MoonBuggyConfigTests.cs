@@ -1,6 +1,6 @@
 using MoonBuggy.Core.Config;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.Core.Tests.Config;
 
 public class MoonBuggyConfigTests
 {

@@ -4,13 +4,13 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MoonBuggy.Core.Plural
+namespace MoonBuggy.CldrGen.Plural
 {
     /// <summary>
     /// Simplifies CLDR plural rule ASTs for integer-only types.
     /// For integers: v=0, w=0, f=0, t=0, e=0, and i=n.
     /// </summary>
-    internal static class IntegerSimplifier
+    public static class IntegerSimplifier
     {
         /// <summary>
         /// Returns null if the entire rule is dead (always false).

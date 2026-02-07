@@ -1,6 +1,6 @@
-using MoonBuggy.Core.Plural;
+using MoonBuggy.CldrGen.Plural;
 
-namespace MoonBuggy.Tests;
+namespace MoonBuggy.CldrGen.Tests.Plural;
 
 public class CSharpPluralEmitterTests
 {
@@ -89,42 +89,6 @@ public class CSharpPluralEmitterTests
         var expr = Parse("n % 10 = 3..4,9");
         var code = CSharpPluralEmitter.EmitCondition(expr);
         Assert.Equal("((n % 10 >= 3 && n % 10 <= 4) || n % 10 == 9)", code);
-    }
-
-    [Fact]
-    public void EmitCategoryBody_SimpleEnglish_ProducesValidCode()
-    {
-        var rules = new Dictionary<PluralCategory, OrExpr?>
-        {
-            [PluralCategory.One] = Parse("n = 1"),
-            [PluralCategory.Other] = null
-        };
-
-        var body = CSharpPluralEmitter.EmitCategoryBody(rules, "    ");
-        Assert.Contains("if (n == 1) return PluralCategory.One;", body);
-        Assert.Contains("return PluralCategory.Other;", body);
-    }
-
-    [Fact]
-    public void EmitCategoryBody_ArabicRules_ProducesAllCategories()
-    {
-        var rules = new Dictionary<PluralCategory, OrExpr?>
-        {
-            [PluralCategory.Zero] = Parse("n = 0"),
-            [PluralCategory.One] = Parse("n = 1"),
-            [PluralCategory.Two] = Parse("n = 2"),
-            [PluralCategory.Few] = Parse("n % 100 = 3..10"),
-            [PluralCategory.Many] = Parse("n % 100 = 11..99"),
-            [PluralCategory.Other] = null
-        };
-
-        var body = CSharpPluralEmitter.EmitCategoryBody(rules, "    ");
-        Assert.Contains("PluralCategory.Zero", body);
-        Assert.Contains("PluralCategory.One", body);
-        Assert.Contains("PluralCategory.Two", body);
-        Assert.Contains("PluralCategory.Few", body);
-        Assert.Contains("PluralCategory.Many", body);
-        Assert.Contains("PluralCategory.Other", body);
     }
 
     // Helper: parse + simplify for emitter tests
