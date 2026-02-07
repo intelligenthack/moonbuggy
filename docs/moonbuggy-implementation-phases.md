@@ -142,7 +142,7 @@ Each phase produces testable output. Later phases depend on earlier ones.
 **Projects:** `samples/MoonBuggy.Sample/` (new Razor Pages app)
 
 **Deliverables:**
-- Minimal ASP.NET Razor Pages app (`net10.0`)
+- Minimal ASP.NET Razor Pages or MVC app (`net8.0`)
 - References `intelligenthack.MoonBuggy` + `intelligenthack.MoonBuggy.SourceGenerator` via ProjectReference
 - `moonbuggy.config.json` with `en` + `es` locales
 - Pages demonstrating:
@@ -153,6 +153,7 @@ Each phase produces testable output. Later phases depend on earlier ones.
 - `README.md` inside `samples/` explaining how to run it
 - Sample is buildable standalone (`dotnet run` from its directory)
 - Sample is NOT included in the solution test run
+- DO NOT CHANGE THE LIBRARY. THE LIBRARY MUST WORK AS IS. USE RAZOR SYNTAX.
 
 **Why now:** Acts as a real-world integration test for the library. Shakes out bugs, missing features, or ergonomic issues before anything is packaged and published. Also provides the concrete app that benchmarks (Phase 12), docs (Phase 14), and packaging smoke tests (Phase 13) all reference.
 
