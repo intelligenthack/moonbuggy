@@ -69,4 +69,12 @@ internal static class Diagnostics
         Category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor PluralSelectorNotInteger = new(
+        "MB0009",
+        "Plural selector is not an integer type",
+        "Plural selector '{0}' must be an integer type (byte, short, int, long, etc.), not a floating-point or decimal type",
+        Category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

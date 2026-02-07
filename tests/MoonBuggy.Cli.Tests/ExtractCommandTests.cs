@@ -203,4 +203,154 @@ var b = _t(""Existing"");");
         Assert.Equal(1, result.NewMessages);
         Assert.Equal(1, result.ObsoleteRemoved);
     }
+
+    // --- File arguments: extract from specific files only ---
+
+    [Fact]
+    public void Execute_WithFiles_ExtractsOnlyFromSpecifiedFiles()
+    {
+        WriteSourceFile("src/FileA.cs", @"var x = _t(""Hello"");");
+        WriteSourceFile("src/FileB.cs", @"var x = _t(""World"");");
+
+        var config = MakeConfig("es");
+        var files = new[] { Path.Combine(_tempDir, "src/FileA.cs") };
+        ExtractCommand.Execute(config, _tempDir, files: files);
+
+        var catalog = PoReader.Read(ReadPoFile("locales/es/messages.po"));
+        Assert.NotNull(catalog.Find("Hello"));
+        Assert.Null(catalog.Find("World"));
+    }
+
+    [Fact]
+    public void Execute_WithMultipleFiles_ExtractsFromAll()
+    {
+        WriteSourceFile("src/FileA.cs", @"var x = _t(""Hello"");");
+        WriteSourceFile("src/FileB.cs", @"var x = _t(""World"");");
+
+        var config = MakeConfig("es");
+        var files = new[]
+        {
+            Path.Combine(_tempDir, "src/FileA.cs"),
+            Path.Combine(_tempDir, "src/FileB.cs")
+        };
+        ExtractCommand.Execute(config, _tempDir, files: files);
+
+        var catalog = PoReader.Read(ReadPoFile("locales/es/messages.po"));
+        Assert.NotNull(catalog.Find("Hello"));
+        Assert.NotNull(catalog.Find("World"));
+    }
+
+    [Fact]
+    public void Execute_WithNonExistentFile_ThrowsFileNotFound()
+    {
+        var config = MakeConfig("es");
+        var files = new[] { Path.Combine(_tempDir, "NonExistent.cs") };
+
+        Assert.Throws<FileNotFoundException>(() =>
+            ExtractCommand.Execute(config, _tempDir, files: files));
+    }
+
+    [Fact]
+    public void Execute_WithNoFiles_UsesConfigGlobs()
+    {
+        WriteSourceFile("src/FileA.cs", @"var x = _t(""Hello"");");
+        WriteSourceFile("src/FileB.cs", @"var x = _t(""World"");");
+
+        var config = MakeConfig("es");
+        ExtractCommand.Execute(config, _tempDir);
+
+        var catalog = PoReader.Read(ReadPoFile("locales/es/messages.po"));
+        Assert.NotNull(catalog.Find("Hello"));
+        Assert.NotNull(catalog.Find("World"));
+    }
+
+    // --- Locale filter: extract for specific locales only ---
+
+    [Fact]
+    public void Execute_WithLocaleFilter_OnlyUpdatesSpecifiedLocale()
+    {
+        WriteSourceFile("src/App.cs", @"var x = _t(""Hello"");");
+
+        var config = MakeConfig("en", "es", "ru");
+        ExtractCommand.Execute(config, _tempDir, localeFilter: new[] { "es" });
+
+        Assert.True(File.Exists(Path.Combine(_tempDir, "locales/es/messages.po")));
+        Assert.False(File.Exists(Path.Combine(_tempDir, "locales/en/messages.po")));
+        Assert.False(File.Exists(Path.Combine(_tempDir, "locales/ru/messages.po")));
+    }
+
+    [Fact]
+    public void Execute_WithMultipleLocaleFilters_UpdatesSpecifiedLocales()
+    {
+        WriteSourceFile("src/App.cs", @"var x = _t(""Hello"");");
+
+        var config = MakeConfig("en", "es", "ru");
+        ExtractCommand.Execute(config, _tempDir, localeFilter: new[] { "es", "ru" });
+
+        Assert.True(File.Exists(Path.Combine(_tempDir, "locales/es/messages.po")));
+        Assert.True(File.Exists(Path.Combine(_tempDir, "locales/ru/messages.po")));
+        Assert.False(File.Exists(Path.Combine(_tempDir, "locales/en/messages.po")));
+    }
+
+    [Fact]
+    public void Execute_WithInvalidLocaleFilter_ThrowsArgumentException()
+    {
+        WriteSourceFile("src/App.cs", @"var x = _t(""Hello"");");
+
+        var config = MakeConfig("en", "es");
+
+        Assert.Throws<ArgumentException>(() =>
+            ExtractCommand.Execute(config, _tempDir, localeFilter: new[] { "xx" }));
+    }
+
+    [Fact]
+    public void Execute_WithNoLocaleFilter_UpdatesAllLocales()
+    {
+        WriteSourceFile("src/App.cs", @"var x = _t(""Hello"");");
+
+        var config = MakeConfig("en", "es");
+        ExtractCommand.Execute(config, _tempDir);
+
+        Assert.True(File.Exists(Path.Combine(_tempDir, "locales/en/messages.po")));
+        Assert.True(File.Exists(Path.Combine(_tempDir, "locales/es/messages.po")));
+    }
+
+    // --- Flag combinations ---
+
+    [Fact]
+    public void Execute_FilesAndLocaleFilter_BothApply()
+    {
+        WriteSourceFile("src/FileA.cs", @"var x = _t(""Hello"");");
+        WriteSourceFile("src/FileB.cs", @"var x = _t(""World"");");
+
+        var config = MakeConfig("en", "es");
+        var files = new[] { Path.Combine(_tempDir, "src/FileA.cs") };
+        ExtractCommand.Execute(config, _tempDir, files: files, localeFilter: new[] { "es" });
+
+        // Only FileA scanned, only es locale updated
+        Assert.True(File.Exists(Path.Combine(_tempDir, "locales/es/messages.po")));
+        Assert.False(File.Exists(Path.Combine(_tempDir, "locales/en/messages.po")));
+
+        var catalog = PoReader.Read(ReadPoFile("locales/es/messages.po"));
+        Assert.NotNull(catalog.Find("Hello"));
+        Assert.Null(catalog.Find("World"));
+    }
+
+    [Fact]
+    public void Execute_FilesAndCleanAndLocaleFilter_AllApply()
+    {
+        WriteSourceFile("src/FileA.cs", @"var x = _t(""Hello"");");
+
+        var existingPo = "msgid \"Obsolete\"\nmsgstr \"Obsoleto\"\n";
+        WritePoFile("locales/es/messages.po", existingPo);
+
+        var config = MakeConfig("en", "es");
+        var files = new[] { Path.Combine(_tempDir, "src/FileA.cs") };
+        ExtractCommand.Execute(config, _tempDir, clean: true, files: files, localeFilter: new[] { "es" });
+
+        var catalog = PoReader.Read(ReadPoFile("locales/es/messages.po"));
+        Assert.NotNull(catalog.Find("Hello"));
+        Assert.Null(catalog.Find("Obsolete"));
+        Assert.False(File.Exists(Path.Combine(_tempDir, "locales/en/messages.po")));
+    }
 }

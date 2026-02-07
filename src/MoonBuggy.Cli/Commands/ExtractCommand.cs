@@ -18,14 +18,40 @@ public class ExtractResult
 public static class ExtractCommand
 {
     public static Dictionary<string, ExtractResult> Execute(
-        MoonBuggyConfig config, string baseDirectory, bool clean = false)
+        MoonBuggyConfig config, string baseDirectory, bool clean = false,
+        IReadOnlyList<string>? files = null, IReadOnlyList<string>? localeFilter = null)
     {
+        // Validate locale filter
+        if (localeFilter != null)
+        {
+            foreach (var locale in localeFilter)
+            {
+                if (!config.Locales.Contains(locale))
+                    throw new System.ArgumentException($"Locale '{locale}' is not configured. Available locales: {string.Join(", ", config.Locales)}");
+            }
+        }
+
         var allResults = new Dictionary<string, ExtractResult>();
 
         foreach (var catalogConfig in config.Catalogs)
         {
-            // 1. Scan source files
-            var messages = SourceScanner.ScanFiles(baseDirectory, catalogConfig.Include);
+            // 1. Scan source files — use explicit files if provided, otherwise use config globs
+            IReadOnlyList<ExtractedMessage> messages;
+            if (files != null && files.Count > 0)
+            {
+                var allMessages = new List<ExtractedMessage>();
+                foreach (var file in files)
+                {
+                    if (!File.Exists(file))
+                        throw new FileNotFoundException($"Source file not found: {file}", file);
+                    allMessages.AddRange(SourceScanner.ScanFile(file));
+                }
+                messages = allMessages;
+            }
+            else
+            {
+                messages = SourceScanner.ScanFiles(baseDirectory, catalogConfig.Include);
+            }
 
             // 2. Transform MB syntax to ICU and collect unique entries
             var icuMessages = new List<(string MsgId, string? MsgCtxt, string FilePath, int LineNumber)>();
@@ -41,8 +67,12 @@ public static class ExtractCommand
             var activeKeys = new HashSet<(string MsgId, string? MsgCtxt)>(
                 icuMessages.Select(m => (m.MsgId, m.MsgCtxt)));
 
-            // 4. For each locale, merge into PO catalog
-            foreach (var locale in config.Locales)
+            // 4. For each locale (filtered if specified), merge into PO catalog
+            var localesToProcess = localeFilter != null
+                ? config.Locales.Where(l => localeFilter.Contains(l)).ToList()
+                : config.Locales;
+
+            foreach (var locale in localesToProcess)
             {
                 var poRelativePath = config.GetPoPath(catalogConfig, locale);
                 var poFullPath = Path.Combine(baseDirectory, poRelativePath);

@@ -23,8 +23,36 @@ switch (command)
 
 int RunExtract(string[] flags)
 {
-    var clean = flags.Contains("--clean");
-    var verbose = flags.Contains("--verbose") || flags.Contains("-v");
+    var clean = false;
+    var verbose = false;
+    var watch = false;
+    var locales = new List<string>();
+    var files = new List<string>();
+
+    for (var i = 0; i < flags.Length; i++)
+    {
+        switch (flags[i])
+        {
+            case "--clean":
+                clean = true;
+                break;
+            case "--verbose":
+            case "-v":
+                verbose = true;
+                break;
+            case "--watch":
+                watch = true;
+                break;
+            case "--locale":
+                if (i + 1 < flags.Length)
+                    locales.Add(flags[++i]);
+                break;
+            default:
+                if (!flags[i].StartsWith("-"))
+                    files.Add(flags[i]);
+                break;
+        }
+    }
 
     var configPath = FindConfigFile();
     if (configPath == null)
@@ -58,17 +86,54 @@ int RunExtract(string[] flags)
         return 1;
     }
 
+    // Resolve file paths relative to current directory
+    var resolvedFiles = files.Count > 0
+        ? files.Select(f => Path.GetFullPath(f)).ToList()
+        : null;
+
+    var localeFilter = locales.Count > 0 ? locales : null;
+
     if (verbose)
     {
         Console.WriteLine($"Config: {configPath}");
-        Console.WriteLine($"Locales: {string.Join(", ", config.Locales)}");
+        Console.WriteLine($"Locales: {string.Join(", ", localeFilter ?? config.Locales)}");
         Console.WriteLine($"Catalogs: {config.Catalogs.Count}");
+        if (resolvedFiles != null)
+            Console.WriteLine($"Files: {string.Join(", ", files)}");
+        if (watch)
+            Console.WriteLine("Watch: enabled");
         Console.WriteLine();
     }
 
-    var results = ExtractCommand.Execute(config, baseDirectory, clean);
+    try
+    {
+        var results = ExtractCommand.Execute(config, baseDirectory, clean,
+            files: resolvedFiles, localeFilter: localeFilter);
 
-    // Print results table
+        PrintExtractResults(results);
+    }
+    catch (FileNotFoundException ex)
+    {
+        Console.Error.WriteLine($"Error: {ex.Message}");
+        return 1;
+    }
+    catch (ArgumentException ex)
+    {
+        Console.Error.WriteLine($"Error: {ex.Message}");
+        return 1;
+    }
+
+    if (watch)
+    {
+        Console.WriteLine("Watching for changes... (press Ctrl+C to stop)");
+        WatchAndExtract(config, baseDirectory, clean, resolvedFiles, localeFilter);
+    }
+
+    return 0;
+}
+
+void PrintExtractResults(Dictionary<string, ExtractResult> results)
+{
     Console.WriteLine("Catalog                         Total   New  Obsolete");
     Console.WriteLine("-----------------------------------------------------");
     foreach (var (path, result) in results.OrderBy(r => r.Key))
@@ -79,7 +144,64 @@ int RunExtract(string[] flags)
 
     Console.WriteLine();
     Console.WriteLine("Done.");
-    return 0;
+}
+
+void WatchAndExtract(MoonBuggyConfig config, string baseDirectory, bool clean,
+    List<string>? files, List<string>? localeFilter)
+{
+    using var watcher = new FileSystemWatcher(baseDirectory);
+    watcher.IncludeSubdirectories = true;
+    watcher.Filter = "*.cs";
+    watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+
+    // Also watch .cshtml files
+    using var cshtmlWatcher = new FileSystemWatcher(baseDirectory);
+    cshtmlWatcher.IncludeSubdirectories = true;
+    cshtmlWatcher.Filter = "*.cshtml";
+    cshtmlWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+
+    var debounceTimer = new System.Timers.Timer(300) { AutoReset = false };
+    debounceTimer.Elapsed += (_, _) =>
+    {
+        try
+        {
+            Console.WriteLine();
+            Console.WriteLine("Change detected, re-extracting...");
+            var results = ExtractCommand.Execute(config, baseDirectory, clean,
+                files: files, localeFilter: localeFilter);
+            PrintExtractResults(results);
+            Console.WriteLine("Watching for changes... (press Ctrl+C to stop)");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error during re-extraction: {ex.Message}");
+        }
+    };
+
+    void OnChange(object sender, FileSystemEventArgs e)
+    {
+        debounceTimer.Stop();
+        debounceTimer.Start();
+    }
+
+    watcher.Changed += OnChange;
+    watcher.Created += OnChange;
+    watcher.Renamed += (s, e) => OnChange(s, e);
+    cshtmlWatcher.Changed += OnChange;
+    cshtmlWatcher.Created += OnChange;
+    cshtmlWatcher.Renamed += (s, e) => OnChange(s, e);
+
+    watcher.EnableRaisingEvents = true;
+    cshtmlWatcher.EnableRaisingEvents = true;
+
+    // Block until Ctrl+C
+    var cts = new CancellationTokenSource();
+    Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+    try { Task.Delay(Timeout.Infinite, cts.Token).Wait(); }
+    catch (AggregateException) { }
+
+    Console.WriteLine();
+    Console.WriteLine("Stopped watching.");
 }
 
 int RunValidate(string[] flags)
@@ -186,8 +308,11 @@ void PrintUsage()
     Console.WriteLine("  validate   Validate PO catalogs for correctness");
     Console.WriteLine();
     Console.WriteLine("Extract options:");
-    Console.WriteLine("  --clean    Remove obsolete entries from PO files");
-    Console.WriteLine("  --verbose  Print detailed output");
+    Console.WriteLine("  [files...]         Extract from specific files only (default: use config globs)");
+    Console.WriteLine("  --locale <locale>  Extract only for the specified locale (repeatable)");
+    Console.WriteLine("  --clean            Remove obsolete entries from PO files");
+    Console.WriteLine("  --watch            Re-extract automatically when source files change");
+    Console.WriteLine("  --verbose          Print detailed output");
     Console.WriteLine();
     Console.WriteLine("Validate options:");
     Console.WriteLine("  --strict           Fail on missing translations");
