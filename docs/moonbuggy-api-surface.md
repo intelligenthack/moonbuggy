@@ -211,6 +211,7 @@ No public API. Ships as a Roslyn analyzer + source generator.
 | MB0006 | Warning | Markdig produced unexpected or empty HTML from `_m()` message |
 | MB0007 | Error | Empty message string passed to `_t()` or `_m()` |
 | MB0008 | Error | `context` argument is not a compile-time constant string |
+| MB0009 | Error | Plural selector variable is not an integer type (`float`, `double`, `decimal` are rejected — use an explicit cast) |
 
 ---
 

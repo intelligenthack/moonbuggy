@@ -247,4 +247,49 @@ public class Program
         var (diagnostics, generatedTrees) = GeneratorTestHelper.RunGenerator(source);
         Assert.Contains(diagnostics, d => d.Id == "MB0008");
     }
+
+    [Fact]
+    public void ConstVariable_AcceptedAsMessage()
+    {
+        var source = @"
+using static MoonBuggy.Translate;
+
+public class Program
+{
+    public static void Main()
+    {
+        const string s = ""Hello"";
+        var result = _t(s);
+    }
+}";
+        var (diagnostics, generatedTrees) = GeneratorTestHelper.RunGenerator(source);
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        Assert.Single(generatedTrees);
+
+        var generated = generatedTrees[0].GetText().ToString();
+        Assert.Contains("\"Hello\"", generated);
+    }
+
+    [Fact]
+    public void MarkdownInPlainText_TreatedAsLiteral()
+    {
+        var source = @"
+using static MoonBuggy.Translate;
+
+public class Program
+{
+    public static void Main()
+    {
+        var result = _t(""Click **here**"");
+    }
+}";
+        var (diagnostics, generatedTrees) = GeneratorTestHelper.RunGenerator(source);
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        Assert.Single(generatedTrees);
+
+        var generated = generatedTrees[0].GetText().ToString();
+        // _t() does not process markdown — ** is literal text
+        Assert.Contains("Click **here**", generated);
+        Assert.DoesNotContain("<strong>", generated);
+    }
 }

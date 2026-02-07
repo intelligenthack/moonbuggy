@@ -119,3 +119,15 @@ Each phase produces testable output. Later phases depend on earlier ones.
 - `PseudoLocalizer` — accent transform per the spec's mapping table
 - Source generator integration: emit pseudo-locale case when `MoonBuggyPseudoLocale` is enabled
 - Tests for accent mapping, variable/placeholder preservation (test cases 6.1–6.2)
+
+---
+
+## Phase 10: Initial Polish
+
+**Projects:** `MoonBuggy.SourceGenerator` (extend), `MoonBuggy.Cli` (extend), all `.csproj` files (TFM)
+
+**Deliverables:**
+- Plural selector type checking — accept integer types (`byte`, `sbyte`, `short`, `ushort`, `int`, `uint`, `long`, `ulong`), reject `float`/`double`/`decimal` with diagnostic MB0009, emit strongly-typed interceptor code (test cases 10.8.1–10.8.7)
+- `DiagnosticAnalyzer` — real-time IDE diagnostics for MB0001–MB0009 without waiting for full generator pass
+- CLI extract flags: `[files...]`, `--locale`, `--watch`
+- Multi-target `net8.0;net10.0` for runtime library and CLI

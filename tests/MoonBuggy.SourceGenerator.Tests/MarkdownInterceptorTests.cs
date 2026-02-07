@@ -181,4 +181,60 @@ public class Program
         Assert.Contains("<strong>", generated);
         Assert.Contains("<em>", generated);
     }
+
+    [Fact]
+    public void ReorderedPlaceholders_ResolvesCorrectly()
+    {
+        var source = @"
+using static MoonBuggy.Translate;
+
+public class Program
+{
+    public static void Main()
+    {
+        var url = ""https://example.com"";
+        var result = _m(""Read **this** and click [here]($url$)"", new { url });
+    }
+}";
+        var poContent = @"
+msgid ""Read <0>this</0> and click <1>here</1>""
+msgstr ""Haz clic <1>aquí</1> y lee <0>esto</0>""
+";
+        var additionalText = new InMemoryAdditionalText("locales/es/messages.po", poContent);
+        var (diagnostics, generatedTrees) = GeneratorTestHelper.RunGenerator(source, additionalText);
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        Assert.Single(generatedTrees);
+
+        var generated = generatedTrees[0].GetText().ToString();
+        // Spanish translation has reordered placeholders:
+        // <1> (link) comes before <0> (strong)
+        Assert.Contains("aquí", generated);
+        Assert.Contains("esto", generated);
+        Assert.Contains("<a href=", generated);
+        Assert.Contains("<strong>", generated);
+    }
+
+    [Fact]
+    public void HtmlInMarkdown_PassedToMarkdig()
+    {
+        var source = @"
+using static MoonBuggy.Translate;
+
+public class Program
+{
+    public static void Main()
+    {
+        var result = _m(""Click <strong>here</strong>"");
+    }
+}";
+        var (diagnostics, generatedTrees) = GeneratorTestHelper.RunGenerator(source);
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        Assert.Single(generatedTrees);
+
+        var generated = generatedTrees[0].GetText().ToString();
+        // Raw HTML passes through Markdig as text, appears in generated output
+        Assert.Contains("here", generated);
+        // No placeholder indices — raw HTML is not parsed as markdown emphasis
+        Assert.DoesNotContain("<0>", generated);
+    }
 }

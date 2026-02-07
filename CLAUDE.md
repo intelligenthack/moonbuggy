@@ -70,7 +70,7 @@ The source generator reads PO files at build time and emits one interceptor meth
 
 ## Compiler Diagnostics
 
-MB0001: non-constant first arg; MB0002: missing arg property; MB0003: extra arg property; MB0004: PO file not found (warning); MB0005: malformed MB syntax; MB0006: bad markdown output (warning); MB0007: empty message; MB0008: non-constant context.
+MB0001: non-constant first arg; MB0002: missing arg property; MB0003: extra arg property; MB0004: PO file not found (warning); MB0005: malformed MB syntax; MB0006: bad markdown output (warning); MB0007: empty message; MB0008: non-constant context; MB0009: plural selector is not an integer type.
 
 ## Implementation Phases
 

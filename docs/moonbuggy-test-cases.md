@@ -298,7 +298,7 @@ Tests for the pseudo-locale accent transform.
 |---|--------|----------|
 | 7.1.1 | `_t("Hello")` | OK |
 | 7.1.2 | `const string s = "Hello"; _t(s)` | OK |
-| 7.1.3 | `var s = "Hello"; _t(s)` | OK |
+| 7.1.3 | `var s = "Hello"; _t(s)` | Error MB0001 (`var` is not a compile-time constant — use `const string` or inline literal) |
 | 7.1.4 | `_t(GetString())` | Error MB0001 |
 
 ---
@@ -408,11 +408,17 @@ Given PO has `msgid "Save changes"` with `msgstr ""`:
 
 ### 10.8 Plural selector must be integer type
 
+Plural selectors accept all integer types: `byte`, `sbyte`, `short`, `ushort`, `int`, `uint`, `long`, `ulong`. Floating-point types (`float`, `double`, `decimal`) produce compile-time error MB0009. The interceptor emits strongly-typed code targeting the actual type (no blind `(int)` cast). Users can explicitly cast to an integer type if needed.
+
 | # | Source | Expected |
 |---|--------|----------|
 | 10.8.1 | `_t("$#x# item\|#x# items$", new { x = 1 })` | OK (int) |
 | 10.8.2 | `_t("$#x# item\|#x# items$", new { x = 1L })` | OK (long) |
-| 10.8.3 | `_t("$#x# item\|#x# items$", new { x = 1.5 })` | Error (double — not an integer type) |
+| 10.8.3 | `_t("$#x# item\|#x# items$", new { x = 1.5 })` | Error MB0009 (double — not an integer type) |
+| 10.8.4 | `_t("$#x# item\|#x# items$", new { x = 1.5f })` | Error MB0009 (float — not an integer type) |
+| 10.8.5 | `_t("$#x# item\|#x# items$", new { x = 1.5m })` | Error MB0009 (decimal — not an integer type) |
+| 10.8.6 | `_t("$#x# item\|#x# items$", new { x = (byte)1 })` | OK (byte) |
+| 10.8.7 | `_t("$#x# item\|#x# items$", new { x = (short)1 })` | OK (short) |
 
 ### 10.9 Placeholder indices are global, no restart across plural boundaries
 
