@@ -1,15 +1,12 @@
-name: CI
+name: Release
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  release:
+    types: [published]
 
 jobs:
-  build-and-test:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -33,11 +30,27 @@ jobs:
       - name: Generate CLDR plural rules
         run: dotnet script build/cldr/generate-plural-rules.csx
 
+      - name: Determine version
+        id: version
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: echo "version=${TAG_NAME#v}" >> "$GITHUB_OUTPUT"
+
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build -c Release --no-restore
 
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test -c Release --no-build
+
+      - name: Pack
+        env:
+          PACK_VERSION: ${{ steps.version.outputs.version }}
+        run: dotnet pack -c Release --no-build -o ./artifacts -p:Version="$PACK_VERSION"
+
+      - name: Push to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

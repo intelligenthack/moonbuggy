@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)/moonbuggy.config.json')">
+    <AdditionalFiles Include="locales/**/*.po" />
+  </ItemGroup>
+</Project>

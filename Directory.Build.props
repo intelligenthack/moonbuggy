@@ -5,4 +5,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Authors>Marco Cecconi</Authors>
+    <Company>IntelligentHack</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/intelligenthack/moonbuggy</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/intelligenthack/moonbuggy</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>moonbuggy.jpg</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>i18n;localization;translation;source-generator;po;icu;messageformat</PackageTags>
+    <Copyright>Copyright (c) 2026 Marco Cecconi</Copyright>
+  </PropertyGroup>
 </Project>

@@ -5,11 +5,17 @@
     <RootNamespace>MoonBuggy.Cli</RootNamespace>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>moonbuggy</ToolCommandName>
+    <PackageId>intelligenthack.MoonBuggy.Cli</PackageId>
+    <Description>CLI tool for extracting and validating MoonBuggy translation strings (PO/ICU).</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MoonBuggy.Core\MoonBuggy.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\moonbuggy.jpg" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

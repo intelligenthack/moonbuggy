@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <RootNamespace>MoonBuggy</RootNamespace>
+    <PackageId>intelligenthack.MoonBuggy</PackageId>
+    <Description>Compile-time i18n for .NET — zero-allocation runtime with ICU MessageFormat and PO files.</Description>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="MoonBuggy.Tests" />
@@ -12,5 +14,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MoonBuggy.Core\MoonBuggy.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\moonbuggy.jpg" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

@@ -105,6 +105,21 @@ condSb.AppendLine("            if (_conditions.TryGetValue(locale, out var cats)
 condSb.AppendLine("                return condition;");
 condSb.AppendLine("            return null;");
 condSb.AppendLine("        }");
+condSb.AppendLine();
+condSb.AppendLine("        internal static IEnumerable<PluralCategory> GetRequiredCategories(string locale)");
+condSb.AppendLine("        {");
+condSb.AppendLine("            if (_conditions.TryGetValue(locale, out var cats))");
+condSb.AppendLine("            {");
+condSb.AppendLine("                foreach (var cat in cats.Keys)");
+condSb.AppendLine("                    yield return cat;");
+condSb.AppendLine("            }");
+condSb.AppendLine("            yield return PluralCategory.Other;");
+condSb.AppendLine("        }");
+condSb.AppendLine();
+condSb.AppendLine("        internal static bool HasLocale(string locale)");
+condSb.AppendLine("        {");
+condSb.AppendLine("            return _conditions.ContainsKey(locale);");
+condSb.AppendLine("        }");
 condSb.AppendLine("    }");
 condSb.AppendLine("}");
 
