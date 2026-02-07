@@ -120,6 +120,7 @@ public class Program
         // "Hi {name}!" → "Ḧï {name}!" → emitted as string.Concat("Ḧï ", args.name, "!")
         Assert.Contains("4096", generated);
         Assert.Contains("__args.name", generated);
+        Assert.DoesNotContain("dynamic", generated);
     }
 
     [Fact]

@@ -38,6 +38,15 @@ internal static class InterceptorEmitter
         sb.AppendLine("    internal static class Interceptors");
         sb.AppendLine("    {");
 
+        // Emit cast-by-example helper for typed arg access (no dynamic)
+        var hasArgs = callSites.Any(s => s.ArgProperties.Count > 0);
+        if (hasArgs)
+        {
+            sb.AppendLine("        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+            sb.AppendLine("        private static T __cast<T>(object obj, T _) where T : class => (T)obj;");
+            sb.AppendLine();
+        }
+
         for (int i = 0; i < callSites.Count; i++)
         {
             var site = callSites[i];
@@ -81,17 +90,18 @@ internal static class InterceptorEmitter
         var sourceIcu = site.IsMarkdown ? ResolvePlaceholders(icuMsgId, mappings!) : icuMsgId;
         var sourceNodes = IcuParser.Parse(sourceIcu);
 
-        // Extract args from dynamic
+        // Extract args via cast-by-example (typed, no dynamic)
         if (site.ArgProperties.Count > 0)
         {
-            sb.AppendLine("            var __args = (dynamic)args!;");
+            var shapeValue = EmitShapeValue(site.ArgProperties);
+            sb.AppendLine($"            var __args = __cast(args!, {shapeValue});");
         }
 
         // Extract integer variables used as plural selectors
         var pluralVars = CollectPluralVariables(sourceNodes);
         foreach (var pv in pluralVars)
         {
-            sb.AppendLine($"            int __{pv} = (int)__args.{pv};");
+            sb.AppendLine($"            int __{pv} = __args.{pv};");
         }
 
         // Collect locale branches
@@ -433,9 +443,9 @@ internal static class InterceptorEmitter
                     var argType = site.ArgProperties
                         .FirstOrDefault(a => a.Name == variable.Name).TypeName;
                     if (argType == "string")
-                        parts.Add(($"(string)__args.{variable.Name}", true));
+                        parts.Add(($"__args.{variable.Name}", true));
                     else
-                        parts.Add(($"((object)__args.{variable.Name}).ToString()", true));
+                        parts.Add(($"__args.{variable.Name}.ToString()", true));
                     break;
 
                 case IcuHashNode:
@@ -458,5 +468,11 @@ internal static class InterceptorEmitter
             .Replace("\n", "\\n")
             .Replace("\r", "\\r")
             .Replace("\t", "\\t");
+    }
+
+    private static string EmitShapeValue(List<(string Name, string TypeName)> props)
+    {
+        var parts = props.Select(p => $"{p.Name} = default({p.TypeName})!");
+        return $"new {{ {string.Join(", ", parts)} }}";
     }
 }

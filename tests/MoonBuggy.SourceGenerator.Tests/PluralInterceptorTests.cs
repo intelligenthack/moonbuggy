@@ -159,6 +159,7 @@ public class Program
         Assert.Contains("__args.name", generated);
         Assert.Contains("item", generated);
         Assert.Contains("items", generated);
+        Assert.DoesNotContain("dynamic", generated);
     }
 
     [Fact]

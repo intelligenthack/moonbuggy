@@ -51,6 +51,7 @@ public class Program
         Assert.Contains("TranslatedString", generated);
         Assert.Contains("\"Welcome to \"", generated);
         Assert.Contains("\"!\"", generated);
+        Assert.DoesNotContain("dynamic", generated);
     }
 
     [Fact]

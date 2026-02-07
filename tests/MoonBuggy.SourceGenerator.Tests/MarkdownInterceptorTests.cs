@@ -103,6 +103,7 @@ public class Program
         Assert.Contains("<strong>", generated);
         Assert.Contains("__args.name", generated);
         Assert.Contains("TranslatedHtml", generated);
+        Assert.DoesNotContain("dynamic", generated);
     }
 
     [Fact]

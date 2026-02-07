@@ -14,5 +14,6 @@
     <Project Path="tests/MoonBuggy.CldrGen.Tests/MoonBuggy.CldrGen.Tests.csproj" />
     <Project Path="tests/MoonBuggy.Cli.Tests/MoonBuggy.Cli.Tests.csproj" />
     <Project Path="tests/MoonBuggy.SourceGenerator.Tests/MoonBuggy.SourceGenerator.Tests.csproj" />
+    <Project Path="tests/MoonBuggy.Benchmarks/MoonBuggy.Benchmarks.csproj" />
   </Folder>
 </Solution>
