@@ -25,6 +25,9 @@ jobs:
       - name: Restore tools
         run: dotnet tool restore
 
+      - name: Build MoonBuggy.CldrGen
+        run: dotnet build build/MoonBuggy.CldrGen
+
       - name: Generate CLDR plural rules
         run: dotnet script build/cldr/generate-plural-rules.csx
 
