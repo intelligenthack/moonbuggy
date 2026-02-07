@@ -1,14 +1,35 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit to release
+        required: false
   release:
     types: [published]
 
 jobs:
   publish:
+    name: Publish Packages
     runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    environment: nuget
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -17,6 +38,14 @@ jobs:
             8.0.x
             10.0.x
           dotnet-quality: 'preview'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Download CLDR plurals.json
         run: curl -fsSL -o build/cldr/plurals.json https://raw.githubusercontent.com/unicode-org/cldr-json/main/cldr-json/cldr-core/supplemental/plurals.json
@@ -50,7 +79,11 @@ jobs:
           PACK_VERSION: ${{ steps.version.outputs.version }}
         run: dotnet pack -c Release --no-build -o ./artifacts -p:Version="$PACK_VERSION"
 
-      - name: Push to NuGet
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push ./artifacts/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Login to NuGet (Trusted Publishing)
+        id: nuget-login
+        uses: nuget/login@v1
+        with:
+          user: sklivvz
+
+      - name: Push to NuGet.org
+        run: dotnet nuget push ./artifacts/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"
