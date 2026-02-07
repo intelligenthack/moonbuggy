@@ -35,13 +35,21 @@ public sealed class MoonBuggyGenerator : IIncrementalGenerator
             .Where(static result => result != null)
             .Collect();
 
-        // Combine call sites with PO files to emit interceptors
-        var combined = callSites.Combine(poFiles);
+        // Read MoonBuggyPseudoLocale MSBuild property
+        var pseudoLocale = context.AnalyzerConfigOptionsProvider
+            .Select(static (provider, _) =>
+            {
+                provider.GlobalOptions.TryGetValue("build_property.MoonBuggyPseudoLocale", out var value);
+                return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+            });
+
+        // Combine call sites with PO files and pseudo-locale flag to emit interceptors
+        var combined = callSites.Combine(poFiles).Combine(pseudoLocale);
 
         context.RegisterSourceOutput(combined, static (spc, source) =>
         {
-            var (callSiteResults, poFileResults) = source;
-            Execute(spc, callSiteResults!, poFileResults!);
+            var ((callSiteResults, poFileResults), pseudoLocaleEnabled) = source;
+            Execute(spc, callSiteResults!, poFileResults!, pseudoLocaleEnabled);
         });
     }
 
@@ -154,7 +162,8 @@ public sealed class MoonBuggyGenerator : IIncrementalGenerator
     private static void Execute(
         SourceProductionContext spc,
         ImmutableArray<CallSiteResult?> callSiteResults,
-        ImmutableArray<LocaleTranslation?> poFileResults)
+        ImmutableArray<LocaleTranslation?> poFileResults,
+        bool pseudoLocaleEnabled)
     {
         var callSites = new List<CallSiteInfo>();
         var diagnosticsList = new List<Diagnostic>();
@@ -213,7 +222,7 @@ public sealed class MoonBuggyGenerator : IIncrementalGenerator
 
         var translations = poFileResults.Where(t => t != null).Select(t => t!).ToList();
 
-        var source = InterceptorEmitter.Emit(callSites, translations);
+        var source = InterceptorEmitter.Emit(callSites, translations, pseudoLocaleEnabled);
         spc.AddSource("MoonBuggy.Interceptors.g.cs", SourceText.From(source, Encoding.UTF8));
     }
 

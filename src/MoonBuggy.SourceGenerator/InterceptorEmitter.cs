@@ -9,6 +9,7 @@ using MoonBuggy.Core.Markdown;
 using MoonBuggy.Core.Parsing;
 using MoonBuggy.Core.Po;
 using MoonBuggy.Core.Plural;
+using MoonBuggy.Core.Pseudo;
 
 namespace MoonBuggy.SourceGenerator;
 
@@ -21,7 +22,7 @@ internal sealed class LocaleTranslation
 
 internal static class InterceptorEmitter
 {
-    public static string Emit(List<CallSiteInfo> callSites, List<LocaleTranslation> translations)
+    public static string Emit(List<CallSiteInfo> callSites, List<LocaleTranslation> translations, bool pseudoLocale = false)
     {
         var sb = new StringBuilder();
 
@@ -40,7 +41,7 @@ internal static class InterceptorEmitter
         for (int i = 0; i < callSites.Count; i++)
         {
             var site = callSites[i];
-            EmitInterceptor(sb, site, i, translations);
+            EmitInterceptor(sb, site, i, translations, pseudoLocale);
         }
 
         sb.AppendLine("    }");
@@ -50,7 +51,7 @@ internal static class InterceptorEmitter
     }
 
     private static void EmitInterceptor(
-        StringBuilder sb, CallSiteInfo site, int index, List<LocaleTranslation> translations)
+        StringBuilder sb, CallSiteInfo site, int index, List<LocaleTranslation> translations, bool pseudoLocale)
     {
         var prefix = site.IsMarkdown ? "__m" : "__t";
         var returnType = site.IsMarkdown ? "IHtmlContent" : "string";
@@ -106,6 +107,15 @@ internal static class InterceptorEmitter
                 var translatedNodes = IcuParser.Parse(translatedIcu);
                 localeBranches.Add((translation.Lcid, translation.Locale, translatedNodes));
             }
+        }
+
+        // Add pseudo-locale branch when enabled
+        if (pseudoLocale)
+        {
+            var pseudoIcu = PseudoLocalizer.Transform(icuMsgId);
+            var pseudoResolved = site.IsMarkdown ? ResolvePlaceholders(pseudoIcu, mappings!) : pseudoIcu;
+            var pseudoNodes = IcuParser.Parse(pseudoResolved);
+            localeBranches.Add((4096, "en", pseudoNodes));
         }
 
         if (localeBranches.Count > 0)
