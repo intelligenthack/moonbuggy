@@ -6,6 +6,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="MoonBuggy.Tests" />
     <InternalsVisibleTo Include="MoonBuggy" />
+    <InternalsVisibleTo Include="MoonBuggy.SourceGenerator" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.38.0" />
