@@ -26,7 +26,7 @@ public class Program
         var generated = generatedTrees[0].GetText().ToString();
         Assert.Contains("<strong>", generated);
         Assert.Contains("</strong>", generated);
-        Assert.Contains("HtmlString", generated);
+        Assert.Contains("TranslatedHtml", generated);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class Program
         var generated = generatedTrees[0].GetText().ToString();
         Assert.Contains("<a href=", generated);
         Assert.Contains("</a>", generated);
-        Assert.Contains("HtmlString", generated);
+        Assert.Contains("TranslatedHtml", generated);
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class Program
         var generated = generatedTrees[0].GetText().ToString();
         Assert.Contains("<strong>", generated);
         Assert.Contains("__args.name", generated);
-        Assert.Contains("HtmlString", generated);
+        Assert.Contains("TranslatedHtml", generated);
     }
 
     [Fact]

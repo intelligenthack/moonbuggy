@@ -11,7 +11,7 @@ namespace MoonBuggy;
 /// </summary>
 public static class Translate
 {
-    public static string _t(
+    public static TranslatedString _t(
         [ConstantExpected] string message,
         object? args = null,
         [ConstantExpected] string? context = null)

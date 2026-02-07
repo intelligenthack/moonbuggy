@@ -107,8 +107,9 @@ public static class Translate
     /// Optional disambiguation string for messages with identical English text
     /// but different meanings. Maps to PO msgctxt. Must be a compile-time constant.
     /// </param>
-    /// <returns>Plain text string (HTML-unsafe — Razor will encode it).</returns>
-    public static string _t(
+    /// <returns>TranslatedString (implements IHtmlContent for zero-alloc Razor rendering,
+    /// implicit conversion to string for C# code compatibility).</returns>
+    public static TranslatedString _t(
         [ConstantExpected] string message,
         object? args = null,
         [ConstantExpected] string? context = null)
@@ -143,6 +144,53 @@ public static class Translate
         throw new InvalidOperationException(
             "MoonBuggy source generator is not active. Add the MoonBuggy.SourceGenerator package to your project.");
     }
+}
+```
+
+### `TranslatedString` — Zero-allocation `_t()` result
+
+```csharp
+namespace MoonBuggy;
+
+/// <summary>
+/// Readonly struct returned by _t(). Implements IHtmlContent for zero-alloc
+/// Razor rendering. Variable values are HTML-encoded in WriteTo; literals are not.
+/// Has implicit conversion to string for C# code compatibility.
+/// </summary>
+public readonly struct TranslatedString : IHtmlContent
+{
+    /// <summary>Single-segment constructor (no variables).</summary>
+    public TranslatedString(string value);
+
+    /// <summary>Multi-segment constructor (with variables).
+    /// parts[i] is a segment; encode[i] indicates whether to HTML-encode it.</summary>
+    public TranslatedString(string?[] parts, bool[] encode);
+
+    public void WriteTo(TextWriter writer, HtmlEncoder encoder);
+    public override string ToString();
+    public static implicit operator string(TranslatedString ts);
+}
+```
+
+### `TranslatedHtml` — Zero-allocation `_m()` result
+
+```csharp
+namespace MoonBuggy;
+
+/// <summary>
+/// Class returned by _m() interceptors. Contains pre-rendered HTML from Markdig.
+/// WriteTo writes all segments directly without HTML-encoding.
+/// </summary>
+public sealed class TranslatedHtml : IHtmlContent
+{
+    /// <summary>Single-segment constructor (no variables).</summary>
+    public TranslatedHtml(string value);
+
+    /// <summary>Multi-segment constructor (with variables).</summary>
+    public TranslatedHtml(string?[] parts);
+
+    public void WriteTo(TextWriter writer, HtmlEncoder encoder);
+    public override string ToString();
 }
 ```
 

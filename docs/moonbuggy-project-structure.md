@@ -106,7 +106,7 @@ The method bodies throw `InvalidOperationException` when called without an activ
 | File | Description |
 |------|-------------|
 | `MoonBuggyGenerator.cs` | `IIncrementalGenerator` entry point — discovers `_t()`/`_m()` call sites, reads PO files, emits interceptors |
-| `InterceptorEmitter.cs` | Generates interceptor methods: locale switch + `string.Concat()` chains |
+| `InterceptorEmitter.cs` | Generates interceptor methods: locale switch + `TranslatedString`/`TranslatedHtml` construction |
 | `CallSiteAnalyzer.cs` | Extracts constant string argument, anonymous type properties, call site location |
 | `Diagnostics.cs` | MB0001–MB0008 diagnostic descriptors (diagnostics reported inline from generator) |
 

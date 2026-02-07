@@ -318,24 +318,22 @@ Zero lookup — the compiler wires the call directly to the generated method at 
 
 ### Return types
 
-- `_t()` → always returns `string` (plain text)
-- `_m()` → always returns `IHtmlContent` (contains HTML markup — Razor renders it without encoding)
+- `_t()` → returns `TranslatedString` (readonly struct, implements `IHtmlContent`, implicit conversion to `string`)
+- `_m()` → returns `TranslatedHtml` via `IHtmlContent` (class implementing `IHtmlContent`, pre-rendered HTML)
 
-### Razor `@` optimization
+Both types implement `IHtmlContent.WriteTo(TextWriter, HtmlEncoder)` for zero-allocation rendering in Razor. In Razor `@` expressions, the view engine calls `WriteTo` directly — no intermediate string allocation.
 
-In Razor `@` expressions, the source generator can intercept and write directly to the `TextWriter` for zero allocation:
-
-- `@_t(...)` → writes to TextWriter with **HTML encoding** (plain text must be encoded for safe output)
-- `@_m(...)` → writes to TextWriter **without encoding** (output is already safe HTML, generated from markdown)
+- `TranslatedString.WriteTo` HTML-encodes variable values while passing developer-authored literals through raw
+- `TranslatedHtml.WriteTo` writes all segments directly without encoding (content is pre-rendered safe HTML)
 
 ```csharp
-// Normal C# code
-string msg = _t("Welcome!");           // returns string
-IHtmlContent html = _m("Click **here**"); // returns IHtmlContent
+// Normal C# code — implicit conversion to string
+string msg = _t("Welcome!");           // TranslatedString → string via implicit operator
+IHtmlContent html = _m("Click **here**"); // TranslatedHtml implements IHtmlContent
 
-// Razor — source generator intercepts, writes directly to TextWriter
-@_t("Welcome!")           // → HtmlEncode + Write to TextWriter
-@_m("Click **here**")    // → Write to TextWriter (already HTML)
+// Razor — zero allocation via IHtmlContent.WriteTo
+@_t("Welcome!")           // → WriteTo with HTML encoding of variable values
+@_m("Click **here**")    // → WriteTo without encoding (already HTML)
 ```
 
 ### Fallback behavior

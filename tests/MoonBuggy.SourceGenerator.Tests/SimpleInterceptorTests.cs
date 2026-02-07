@@ -48,13 +48,13 @@ public class Program
         Assert.Single(generatedTrees);
 
         var generated = generatedTrees[0].GetText().ToString();
-        Assert.Contains("string.Concat", generated);
+        Assert.Contains("TranslatedString", generated);
         Assert.Contains("\"Welcome to \"", generated);
         Assert.Contains("\"!\"", generated);
     }
 
     [Fact]
-    public void MultipleVariables_EmitsStringConcat()
+    public void MultipleVariables_EmitsTranslatedString()
     {
         var source = @"
 using static MoonBuggy.Translate;
@@ -73,7 +73,7 @@ public class Program
         Assert.Single(generatedTrees);
 
         var generated = generatedTrees[0].GetText().ToString();
-        Assert.Contains("string.Concat", generated);
+        Assert.Contains("TranslatedString", generated);
         Assert.Contains("\"Page \"", generated);
         Assert.Contains("\" of \"", generated);
     }

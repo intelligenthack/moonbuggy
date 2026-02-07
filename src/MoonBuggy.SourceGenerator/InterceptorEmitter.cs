@@ -54,7 +54,7 @@ internal static class InterceptorEmitter
         StringBuilder sb, CallSiteInfo site, int index, List<LocaleTranslation> translations, bool pseudoLocale)
     {
         var prefix = site.IsMarkdown ? "__m" : "__t";
-        var returnType = site.IsMarkdown ? "IHtmlContent" : "string";
+        var returnType = site.IsMarkdown ? "IHtmlContent" : "MoonBuggy.TranslatedString";
 
         sb.AppendLine($"        [InterceptsLocation({site.InterceptableLocationVersion}, \"{EscapeString(site.InterceptableLocationData)}\")]");
         sb.AppendLine($"        internal static {returnType} {prefix}_{index}(string message, object? args = null, string? context = null)");
@@ -368,71 +368,79 @@ internal static class InterceptorEmitter
         }
     }
 
-    private static void EmitStringReturn(StringBuilder sb, List<string> parts, string indent)
+    private static void EmitStringReturn(StringBuilder sb, List<(string Expr, bool IsVariable)> parts, string indent)
     {
         if (parts.Count == 0)
         {
-            sb.AppendLine($"{indent}return \"\";");
+            sb.AppendLine($"{indent}return new MoonBuggy.TranslatedString(\"\");");
             return;
         }
-        if (parts.Count == 1)
+        if (parts.Count == 1 && !parts[0].IsVariable)
         {
-            sb.AppendLine($"{indent}return {parts[0]};");
+            sb.AppendLine($"{indent}return new MoonBuggy.TranslatedString({parts[0].Expr});");
             return;
         }
-        sb.Append($"{indent}return string.Concat(");
+        sb.Append(indent);
+        sb.Append("return new MoonBuggy.TranslatedString(new string?[] { ");
         for (int i = 0; i < parts.Count; i++)
         {
             if (i > 0) sb.Append(", ");
-            sb.Append(parts[i]);
+            sb.Append(parts[i].Expr);
         }
-        sb.AppendLine(");");
+        sb.Append(" }, new bool[] { ");
+        for (int i = 0; i < parts.Count; i++)
+        {
+            if (i > 0) sb.Append(", ");
+            sb.Append(parts[i].IsVariable ? "true" : "false");
+        }
+        sb.AppendLine(" });");
     }
 
-    private static void EmitHtmlReturn(StringBuilder sb, List<string> parts, string indent)
+    private static void EmitHtmlReturn(StringBuilder sb, List<(string Expr, bool IsVariable)> parts, string indent)
     {
         if (parts.Count == 0)
         {
-            sb.AppendLine($"{indent}return new HtmlString(\"\");");
+            sb.AppendLine($"{indent}return new MoonBuggy.TranslatedHtml(\"\");");
             return;
         }
-        if (parts.Count == 1)
+        if (parts.Count == 1 && !parts[0].IsVariable)
         {
-            sb.AppendLine($"{indent}return new HtmlString({parts[0]});");
+            sb.AppendLine($"{indent}return new MoonBuggy.TranslatedHtml({parts[0].Expr});");
             return;
         }
-        sb.Append($"{indent}return new HtmlString(string.Concat(");
+        sb.Append(indent);
+        sb.Append("return new MoonBuggy.TranslatedHtml(new string?[] { ");
         for (int i = 0; i < parts.Count; i++)
         {
             if (i > 0) sb.Append(", ");
-            sb.Append(parts[i]);
+            sb.Append(parts[i].Expr);
         }
-        sb.AppendLine("));");
+        sb.AppendLine(" });");
     }
 
-    internal static List<string> FlattenNodes(IcuNode[] nodes, CallSiteInfo site, string? pluralVariable)
+    internal static List<(string Expr, bool IsVariable)> FlattenNodes(IcuNode[] nodes, CallSiteInfo site, string? pluralVariable)
     {
-        var parts = new List<string>();
+        var parts = new List<(string Expr, bool IsVariable)>();
         foreach (var node in nodes)
         {
             switch (node)
             {
                 case IcuTextNode text:
-                    parts.Add($"\"{EscapeString(text.Value)}\"");
+                    parts.Add(($"\"{EscapeString(text.Value)}\"", false));
                     break;
 
                 case IcuVariableNode variable:
                     var argType = site.ArgProperties
                         .FirstOrDefault(a => a.Name == variable.Name).TypeName;
                     if (argType == "string")
-                        parts.Add($"(string)__args.{variable.Name}");
+                        parts.Add(($"(string)__args.{variable.Name}", true));
                     else
-                        parts.Add($"((object)__args.{variable.Name}).ToString()");
+                        parts.Add(($"((object)__args.{variable.Name}).ToString()", true));
                     break;
 
                 case IcuHashNode:
                     if (pluralVariable != null)
-                        parts.Add($"__{pluralVariable}.ToString()");
+                        parts.Add(($"__{pluralVariable}.ToString()", true));
                     break;
 
                 case IcuPluralNode:
