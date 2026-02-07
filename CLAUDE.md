@@ -24,10 +24,13 @@ src/MoonBuggy/                  # Runtime library (net8.0) — NuGet: intelligen
 src/MoonBuggy.Core/             # Shared internals (netstandard2.0) — NOT a standalone package
 src/MoonBuggy.SourceGenerator/  # Roslyn source generator (netstandard2.0)
 src/MoonBuggy.Cli/              # CLI tool (net8.0) — dotnet tool
-tests/MoonBuggy.Tests/          # Unit tests (xUnit)
+tests/MoonBuggy.Tests/          # Unit tests: runtime library (xUnit)
+tests/MoonBuggy.Core.Tests/     # Unit tests: core parsing, ICU, PO, markdown, pseudo
+tests/MoonBuggy.CldrGen.Tests/  # Unit tests: CLDR generation
 tests/MoonBuggy.SourceGenerator.Tests/  # Source generator integration tests
 tests/MoonBuggy.Cli.Tests/      # CLI integration tests
 build/cldr/                     # CLDR plural rules download + codegen script
+build/MoonBuggy.CldrGen/        # CLDR generation classes (netstandard2.0, standalone)
 ```
 
 ## Architecture
@@ -46,12 +49,12 @@ build/cldr/                     # CLDR plural rules download + codegen script
 ### Source Generator Flow
 The source generator reads PO files at build time and emits one interceptor method per `_t()`/`_m()` call site. Each interceptor contains a locale switch with direct `TextWriter.Write()` chains — no dictionary lookups or string allocations. CLDR plural rules are inlined as integer arithmetic.
 
-### Runtime Fallback
-`Translate._t()` and `Translate._m()` have fallback bodies that resolve MB syntax at runtime (source-locale only). This allows usage without the source generator for tests, IDE IntelliSense, and single-locale apps.
+### Fail-Fast Design
+`Translate._t()` and `Translate._m()` throw `InvalidOperationException` when called without an active source generator interceptor. This surfaces a clear error if the source generator package is missing, rather than silently falling back.
 
 ### Public API (consumed via `using static MoonBuggy.Translate`)
-- `_t(message, args?, context?)` → `string` (plain text)
-- `_m(message, args?, context?)` → `IHtmlContent` (HTML from markdown)
+- `_t(message, args?, context?)` → `TranslatedString` (readonly struct, `IHtmlContent`, implicit `string` conversion)
+- `_m(message, args?, context?)` → `TranslatedHtml` via `IHtmlContent` (pre-rendered HTML)
 - `I18n.Current.LCID` — per-async-context locale (AsyncLocal)
 - First argument must be a compile-time constant string
 
@@ -74,7 +77,7 @@ MB0001: non-constant first arg; MB0002: missing arg property; MB0003: extra arg 
 
 ## Implementation Phases
 
-The project follows a 9-phase build order where each phase depends on previous ones. See `docs/moonbuggy-implementation-phases.md` for details. Phases: (1) MB Parser + ICU Transformer, (2) PO File Handling, (3) CLI Extract for `_t()`, (4) Markdown Placeholder Extraction, (5) CLDR Plural Rules Generation, (6) Runtime Library, (7) Source Generator, (8) CLI Validate, (9) Pseudolocalization.
+The project follows a 15-phase build order where each phase depends on previous ones. See `docs/moonbuggy-implementation-phases.md` for details. Phases 1–9 (core library) are complete. Remaining: (10) Initial Polish — DiagnosticAnalyzer, CLI flags, multi-target `net8.0;net10.0`, (11) Sample Project, (12) Microbenchmarks, (13) NuGet + CD, (14) GitHub Docs, (15) Docs Site.
 
 ## Key Design Decisions
 

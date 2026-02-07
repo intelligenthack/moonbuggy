@@ -431,3 +431,71 @@ Plural selectors accept all integer types: `byte`, `sbyte`, `short`, `ushort`, `
 | # | Scenario | Expected |
 |---|----------|----------|
 | 10.10.1 | `_m("Click <strong>here</strong>")` | Output determined by Markdig (CommonMark passes through raw HTML by default) |
+
+---
+
+## 11. CLI Extract Flags (Phase 10)
+
+### 11.1 File arguments — extract from specific files only
+
+Given source files `FileA.cs` (contains `_t("Hello")`) and `FileB.cs` (contains `_t("World")`):
+
+| # | Command | Expected |
+|---|---------|----------|
+| 11.1.1 | `moonbuggy extract` | PO contains both `msgid "Hello"` and `msgid "World"` |
+| 11.1.2 | `moonbuggy extract FileA.cs` | PO contains only `msgid "Hello"` |
+| 11.1.3 | `moonbuggy extract FileA.cs FileB.cs` | PO contains both `msgid "Hello"` and `msgid "World"` |
+| 11.1.4 | `moonbuggy extract NonExistent.cs` | Error: file not found |
+
+### 11.2 `--locale` flag — extract for specific locale(s) only
+
+Given config with locales `["en", "es", "ru"]`:
+
+| # | Command | Expected |
+|---|---------|----------|
+| 11.2.1 | `moonbuggy extract` | PO files updated for `en`, `es`, and `ru` |
+| 11.2.2 | `moonbuggy extract --locale es` | Only `es` PO file updated; `en` and `ru` unchanged |
+| 11.2.3 | `moonbuggy extract --locale es --locale ru` | `es` and `ru` PO files updated; `en` unchanged |
+| 11.2.4 | `moonbuggy extract --locale xx` | Error: locale `xx` not in config |
+
+### 11.3 `--watch` flag — re-extract on file changes
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 11.3.1 | `moonbuggy extract --watch`, then modify a `.cs` file | PO files re-extracted automatically |
+| 11.3.2 | `moonbuggy extract --watch`, then modify a non-matching file (e.g. `.txt`) | No re-extraction |
+| 11.3.3 | `moonbuggy extract --watch --locale es`, then modify a `.cs` file | Only `es` PO file re-extracted |
+
+### 11.4 Flag combinations
+
+| # | Command | Expected |
+|---|---------|----------|
+| 11.4.1 | `moonbuggy extract FileA.cs --locale es` | Only `FileA.cs` scanned, only `es` PO file updated |
+| 11.4.2 | `moonbuggy extract FileA.cs --clean --locale es` | Only `FileA.cs` scanned, obsolete entries removed from `es` only |
+
+---
+
+## 12. DiagnosticAnalyzer (Phase 10)
+
+The `DiagnosticAnalyzer` reports the same MB0001–MB0009 diagnostics as the source generator, but provides real-time IDE feedback without waiting for a full generator pass. The analyzer runs on individual syntax nodes as they are edited.
+
+### 12.1 Real-time diagnostics
+
+All existing diagnostic test cases (7.1, 10.4, 10.7, 10.8) apply to the analyzer. The analyzer must report the same diagnostic ID, severity, and location as the generator would.
+
+| # | Source | Expected diagnostic | Notes |
+|---|--------|---------------------|-------|
+| 12.1.1 | `_t(GetString())` | MB0001 (Error) | Non-constant first arg — reported in real time |
+| 12.1.2 | `_t("Hello $name$!")` | MB0002 (Error) | Missing `args` — reported in real time |
+| 12.1.3 | `_t("Hello", new { name = "x" })` | MB0003 (Warning) | Extra arg property — reported in real time |
+| 12.1.4 | `_t("$unclosed")` | MB0005 (Error) | Malformed MB syntax — reported in real time |
+| 12.1.5 | `_t("")` | MB0007 (Error) | Empty message — reported in real time |
+| 12.1.6 | `_t("Save", context: GetCtx())` | MB0008 (Error) | Non-constant context — reported in real time |
+| 12.1.7 | `_t("$#x# a\|#x# b$", new { x = 1.5 })` | MB0009 (Error) | Float plural selector — reported in real time |
+
+### 12.2 Analyzer does NOT report PO-dependent diagnostics
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 12.2.1 | PO file missing for configured locale | No MB0004 from analyzer (MB0004 is generator-only — requires PO file access) |
+| 12.2.2 | `_m()` with markdown that produces unexpected HTML | No MB0006 from analyzer (MB0006 is generator-only — requires full markdown processing) |

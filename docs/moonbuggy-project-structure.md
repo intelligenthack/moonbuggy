@@ -26,7 +26,17 @@ moonbuggy/
 │   ├── MoonBuggy.Core.Tests/             # Unit tests: core parsing, ICU, PO, markdown, pseudo
 │   ├── MoonBuggy.CldrGen.Tests/          # Unit tests: CLDR generation
 │   ├── MoonBuggy.SourceGenerator.Tests/   # Integration tests: generated code
-│   └── MoonBuggy.Cli.Tests/              # Integration tests: extract + validate
+│   ├── MoonBuggy.Cli.Tests/              # Integration tests: extract + validate
+│   └── MoonBuggy.Benchmarks/             # [Phase 12] BenchmarkDotNet microbenchmarks (not in test run)
+├── samples/
+│   └── MoonBuggy.Sample/                  # [Phase 11] Razor Pages demo app (not in solution test run)
+├── docs/                                   # Internal reference docs (spec, API, test cases, phases)
+├── docs-site/                              # [Phase 15] Docusaurus documentation site
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                          # CI: build + test on push/PR
+│       ├── release.yml                     # [Phase 13] CD: pack + push to NuGet on release
+│       └── docs.yml                        # [Phase 15] Deploy docs site to GitHub Pages
 ├── MoonBuggy.slnx
 ├── Directory.Build.props                   # Shared build properties
 └── README.md
@@ -53,6 +63,8 @@ moonbuggy/
 | `I18n.cs` | Static class with `AsyncLocal<I18nContext>` and `MarkdownPipeline` property |
 | `I18nContext.cs` | Per-async-context state (LCID) |
 | `Translate.cs` | `_t()` and `_m()` — fail-fast bodies that throw `InvalidOperationException` |
+| `TranslatedString.cs` | Readonly struct returned by `_t()` interceptors — `IHtmlContent`, implicit `string` conversion |
+| `TranslatedHtml.cs` | Class returned by `_m()` interceptors — `IHtmlContent`, pre-rendered HTML |
 
 The method bodies throw `InvalidOperationException` when called without an active source generator interceptor, surfacing a clear error rather than silently falling back.
 
@@ -108,7 +120,8 @@ The method bodies throw `InvalidOperationException` when called without an activ
 | `MoonBuggyGenerator.cs` | `IIncrementalGenerator` entry point — discovers `_t()`/`_m()` call sites, reads PO files, emits interceptors |
 | `InterceptorEmitter.cs` | Generates interceptor methods: locale switch + `TranslatedString`/`TranslatedHtml` construction |
 | `CallSiteAnalyzer.cs` | Extracts constant string argument, anonymous type properties, call site location |
-| `Diagnostics.cs` | MB0001–MB0008 diagnostic descriptors (diagnostics reported inline from generator) |
+| `Diagnostics.cs` | MB0001–MB0009 diagnostic descriptors (diagnostics reported inline from generator) |
+| `MoonBuggyAnalyzer.cs` | [Phase 10] `DiagnosticAnalyzer` — real-time IDE diagnostics for MB0001–MB0009 without waiting for full generator pass |
 
 ---
 
@@ -180,7 +193,7 @@ Integration tests for the source generator.
 **Coverage areas:**
 - Interceptor generation for each message type
 - Locale switching in generated code
-- Diagnostics (MB0001–MB0008) trigger correctly
+- Diagnostics (MB0001–MB0009) trigger correctly
 - Fallback when PO translation is missing
 - Plural code generation with CLDR rules
 - Markdown placeholder resolution in generated code
@@ -204,13 +217,16 @@ Integration tests for the CLI.
 
 ### `intelligenthack.MoonBuggy`
 
-Standard library package. Contains runtime DLL + Markdig dependency.
+Standard library package. Contains runtime DLL + Markdig dependency. After Phase 10 multi-targeting, ships both TFMs:
 
 ```
 lib/
   net8.0/
     MoonBuggy.dll
     MoonBuggy.Core.dll    # internalized or ILMerged
+  net10.0/
+    MoonBuggy.dll
+    MoonBuggy.Core.dll
 ```
 
 ### `intelligenthack.MoonBuggy.SourceGenerator`
@@ -244,6 +260,42 @@ Dotnet tool package.
 
 2. **Source generator must be self-contained** — all dependencies (Core, Markdig) must be packed into the analyzer folder. The compiler won't resolve NuGet dependencies for analyzers at runtime.
 
-3. **Runtime library targets `net8.0`** — interceptors require .NET 8+. No need for broader TFM support.
+3. **Runtime library targets `net8.0`** — interceptors require .NET 8+. Phase 10 adds multi-targeting (`net8.0;net10.0`) for the runtime library and CLI.
 
 4. **CLDR plural rules are generated code** — a build-time script downloads CLDR JSON (`unicode-org/cldr-json` on GitHub, `cldr-core/supplemental/plurals.json`) and generates C# source files into `MoonBuggy.Core/Plural/`. The generated code contains only the plural selection logic needed (pure integer arithmetic — modulo checks), not the entire CLDR dataset. This keeps the library small while ensuring the source generator can emit correct, zero-alloc plural selection inline. The generated files are checked into the repo so builds don't require network access; the script is re-run when upgrading CLDR versions.
+
+---
+
+## Phase 10+ Additions
+
+The following projects and structure are added in Phases 10–15. See [moonbuggy-implementation-phases.md](moonbuggy-implementation-phases.md) for full details.
+
+### `samples/MoonBuggy.Sample/` — Sample App [Phase 11]
+
+**Target:** `net10.0`
+
+Minimal ASP.NET Razor Pages app demonstrating `_t()`, `_m()`, locale switching, and context disambiguation. References runtime + source generator via ProjectReference. Pre-populated PO files for `en` + `es`. Not included in solution test run.
+
+### `tests/MoonBuggy.Benchmarks/` — Microbenchmarks [Phase 12]
+
+**Target:** `net10.0`
+
+BenchmarkDotNet project measuring `TranslatedString.WriteTo`, `TranslatedHtml.WriteTo`, interceptor hot paths, and `ToString()` fallback. Not included in solution test run — run manually via `dotnet run -c Release`.
+
+### NuGet Packaging + CD [Phase 13]
+
+- Single `Version` property in `Directory.Build.props`, overridable by CI
+- Standard package metadata (Authors, License, ProjectUrl, etc.) in `Directory.Build.props`
+- `.github/workflows/release.yml` — CD pipeline triggered on GitHub Release creation (tag `v*`)
+- Packaging smoke test: build sample against local .nupkg to verify analyzer loading and TFM correctness
+
+### User-facing Documentation [Phase 14]
+
+New docs files (separate from internal reference docs):
+- `docs/getting-started.md`, `docs/syntax-reference.md`, `docs/cli-reference.md`
+- `docs/configuration.md`, `docs/lingui-coexistence.md`
+- `README.md` refresh with badges, Quick Start, benchmark highlights
+
+### Documentation Site [Phase 15]
+
+`docs-site/` — Docusaurus project deployed to GitHub Pages via `.github/workflows/docs.yml`.
