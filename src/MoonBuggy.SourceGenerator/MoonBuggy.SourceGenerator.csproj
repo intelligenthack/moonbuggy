@@ -27,7 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\docs\moonbuggy.jpg" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\moonbuggy-icon.png" Pack="true" PackagePath="\" />
     <None Include="build\intelligenthack.MoonBuggy.SourceGenerator.props"
           Pack="true" PackagePath="build;buildTransitive" />
     <None Include="build\intelligenthack.MoonBuggy.SourceGenerator.targets"

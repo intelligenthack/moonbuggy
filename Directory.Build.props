@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/intelligenthack/moonbuggy</PackageProjectUrl>
     <RepositoryUrl>https://github.com/intelligenthack/moonbuggy</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageIcon>moonbuggy.jpg</PackageIcon>
+    <PackageIcon>moonbuggy-icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>i18n;localization;translation;source-generator;po;icu;messageformat</PackageTags>
     <Copyright>Copyright (c) 2026 Marco Cecconi</Copyright>
