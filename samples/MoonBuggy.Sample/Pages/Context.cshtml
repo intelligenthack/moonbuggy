@@ -1,0 +1,25 @@
+@page
+@model ContextModel
+@{
+    Layout = "_Layout";
+}
+
+<h1>@_t("Context Disambiguation")</h1>
+
+<p>@_t("The same English word can have different translations depending on context.")</p>
+
+<section>
+    <h2>@_t("Example: \"Submit\"")</h2>
+    <div class="example">
+        <p><strong>@_t("As a button label:", context: "explanation")</strong> @_t("Submit", context: "button")</p>
+        <p><strong>@_t("As a form heading:", context: "explanation")</strong> @_t("Submit", context: "form-heading")</p>
+    </div>
+</section>
+
+<section>
+    <h2>@_t("Example: \"Post\"")</h2>
+    <div class="example">
+        <p><strong>@_t("As a verb (action):", context: "explanation")</strong> @_t("Post", context: "verb")</p>
+        <p><strong>@_t("As a noun (content):", context: "explanation")</strong> @_t("Post", context: "noun")</p>
+    </div>
+</section>

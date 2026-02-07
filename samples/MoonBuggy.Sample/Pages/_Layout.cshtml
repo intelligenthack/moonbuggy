@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MoonBuggy Sample</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+        nav { display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 1rem; margin-bottom: 2rem; }
+        nav a { text-decoration: none; color: #0066cc; }
+        nav a:hover { text-decoration: underline; }
+        .lang-switcher { margin-left: auto; display: flex; gap: 0.5rem; }
+        .lang-switcher a { padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; }
+        .lang-switcher a.active { background: #0066cc; color: white; border-color: #0066cc; }
+        h1 { color: #333; }
+        section { margin-bottom: 2rem; }
+        code { background: #f0f0f0; padding: 0.15rem 0.3rem; border-radius: 3px; }
+        .example { background: #f8f8f8; padding: 1rem; border-left: 3px solid #0066cc; margin: 0.5rem 0; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">@_t("Home")</a>
+        <a href="/Context">@_t("Context")</a>
+        <div class="lang-switcher">
+            <a href="?lang=en" class="@(MoonBuggy.I18n.Current.LCID == 0 || MoonBuggy.I18n.Current.LCID == 9 ? "active" : "")">English</a>
+            <a href="?lang=es" class="@(MoonBuggy.I18n.Current.LCID == 10 ? "active" : "")">Espa&#241;ol</a>
+        </div>
+    </nav>
+    @RenderBody()
+</body>
+</html>

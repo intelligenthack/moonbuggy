@@ -1,0 +1,10 @@
+{
+  "sourceLocale": "en",
+  "locales": ["en", "es"],
+  "catalogs": [
+    {
+      "path": "locales/{locale}/messages",
+      "include": ["**/*.cs", "**/*.cshtml"]
+    }
+  ]
+}

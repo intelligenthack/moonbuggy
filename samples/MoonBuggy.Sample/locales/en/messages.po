@@ -1,0 +1,80 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Welcome to {name}!"
+msgstr "Welcome to {name}!"
+
+msgid "Variables"
+msgstr "Variables"
+
+msgid "Hello {user}, you are viewing page {num} of {total}."
+msgstr "Hello {user}, you are viewing page {num} of {total}."
+
+msgid "Plurals"
+msgstr "Plurals"
+
+msgid "You have {count, plural, one {# new message} other {# new messages}}."
+msgstr "You have {count, plural, one {# new message} other {# new messages}}."
+
+msgid "{items, plural, =0 {Your cart is empty.} one {You have # item in your cart.} other {You have # items in your cart.}}"
+msgstr "{items, plural, =0 {Your cart is empty.} one {You have # item in your cart.} other {You have # items in your cart.}}"
+
+msgid "Markdown"
+msgstr "Markdown"
+
+msgid "Read the <0><1>documentation</1></0> to learn more."
+msgstr "Read the <0><1>documentation</1></0> to learn more."
+
+msgid "Click <0>here</0> to continue."
+msgstr "Click <0>here</0> to continue."
+
+msgid "Home"
+msgstr "Home"
+
+msgid "Context"
+msgstr "Context"
+
+msgid "Context Disambiguation"
+msgstr "Context Disambiguation"
+
+msgid "The same English word can have different translations depending on context."
+msgstr "The same English word can have different translations depending on context."
+
+msgid "Example: \"Submit\""
+msgstr "Example: \"Submit\""
+
+msgctxt "explanation"
+msgid "As a button label:"
+msgstr "As a button label:"
+
+msgctxt "button"
+msgid "Submit"
+msgstr "Submit"
+
+msgctxt "explanation"
+msgid "As a form heading:"
+msgstr "As a form heading:"
+
+msgctxt "form-heading"
+msgid "Submit"
+msgstr "Submit"
+
+msgid "Example: \"Post\""
+msgstr "Example: \"Post\""
+
+msgctxt "explanation"
+msgid "As a verb (action):"
+msgstr "As a verb (action):"
+
+msgctxt "verb"
+msgid "Post"
+msgstr "Post"
+
+msgctxt "explanation"
+msgid "As a noun (content):"
+msgstr "As a noun (content):"
+
+msgctxt "noun"
+msgid "Post"
+msgstr "Post"

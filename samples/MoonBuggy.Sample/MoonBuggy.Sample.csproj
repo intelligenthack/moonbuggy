@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!--
+      Interceptors: The Csc MSBuild task's InterceptorsNamespaces property
+      doesn't reliably convert to /features: when targeting net8.0 with
+      .NET 10 SDK, so we pass the feature flag directly.
+    -->
+    <Features>$(Features);InterceptorsNamespaces=MoonBuggy.Generated</Features>
+    <NoWarn>MSB3277</NoWarn>
+    <!--
+      UseRazorSourceGenerator=false forces the legacy Razor compilation
+      pipeline, which emits .cshtml.g.cs files as a pre-build step.
+      This makes _t()/_m() calls in Razor views visible to the MoonBuggy
+      source generator (the modern Razor source generator runs in the same
+      compilation pass, so generators can't see each other's output).
+    -->
+    <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+  <!--
+    Reference the runtime library and source generator as built DLLs.
+    Build the main solution first: dotnet build (from repo root).
+    In a real project you'd use the NuGet packages instead — transitive
+    dependencies (Markdig, System.Text.Json) would resolve automatically.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.38.0" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.3.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MoonBuggy">
+      <HintPath>..\..\src\MoonBuggy\bin\$(Configuration)\net8.0\MoonBuggy.dll</HintPath>
+    </Reference>
+    <Analyzer Include="..\..\src\MoonBuggy.SourceGenerator\bin\$(Configuration)\netstandard2.0\MoonBuggy.SourceGenerator.dll" />
+    <Analyzer Include="..\..\src\MoonBuggy.Core\bin\$(Configuration)\netstandard2.0\MoonBuggy.Core.dll" />
+    <Analyzer Include="$(PkgMarkdig)\lib\netstandard2.0\Markdig.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="locales\**\*.po" />
+  </ItemGroup>
+</Project>

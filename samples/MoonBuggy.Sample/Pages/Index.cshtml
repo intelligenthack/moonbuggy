@@ -1,0 +1,34 @@
+@page
+@model IndexModel
+@{
+    Layout = "_Layout";
+}
+
+<h1>@_t("Welcome to $name$!", new { name = "MoonBuggy" })</h1>
+
+<section>
+    <h2>@_t("Variables")</h2>
+    <div class="example">
+        <p>@_t("Hello $user$, you are viewing page $num$ of $total$.", new { user = Model.UserName, num = 3, total = 10 })</p>
+    </div>
+</section>
+
+<section>
+    <h2>@_t("Plurals")</h2>
+    <div class="example">
+        <p>@_t("You have $#count# new message|#count# new messages$.", new { count = Model.MessageCount })</p>
+    </div>
+    <div class="example">
+        <p>@_t("$#items=0#Your cart is empty.|You have #items# item in your cart.|You have #items# items in your cart.$", new { items = Model.CartItems })</p>
+    </div>
+</section>
+
+<section>
+    <h2>@_t("Markdown")</h2>
+    <div class="example">
+        <p>@_m("Read the **[documentation]($url$)** to learn more.", new { url = "https://github.com/intelligenthack/moonbuggy" })</p>
+    </div>
+    <div class="example">
+        <p>@_m("Click **here** to continue.")</p>
+    </div>
+</section>
