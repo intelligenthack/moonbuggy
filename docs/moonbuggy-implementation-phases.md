@@ -155,25 +155,25 @@ Each phase produces testable output. Later phases depend on earlier ones.
 Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preserved as internal reference. The new user-facing docs are a separate layer.
 
 ---
-## Phase 12: Sample Project
+## Phase 12: Sample Project ✅
 
 **Projects:** `samples/MoonBuggy.Sample/` (new Razor Pages app)
 
 **Deliverables:**
-- Minimal ASP.NET Razor Pages or MVC app (`net8.0`)
-- References `intelligenthack.MoonBuggy` + `intelligenthack.MoonBuggy.SourceGenerator` via ProjectReference
+- Minimal ASP.NET Razor Pages app (`net8.0`)
+- References MoonBuggy runtime via DLL `<Reference>` and source generator + Core via `<Analyzer>` (NuGet packages don't exist yet — Phase 14)
 - `moonbuggy.config.json` with `en` + `es` locales
 - Pages demonstrating:
-  1. **Index** — simple `_t()` with variables, plurals, `_m()` with markdown
-  2. **Locale switcher** — dropdown/links setting `I18n.Current.LCID` via middleware
-  3. **Context disambiguation** — same English text, different translations
+  1. **Index** — `_t()` with variables, plurals (two-form and three-form), `_m()` with markdown
+  2. **Locale switcher** — nav bar links setting `I18n.Current.LCID` via cookie middleware
+  3. **Context disambiguation** — same English text ("Submit", "Post") with different `context` values producing different Spanish translations
 - Pre-populated PO files for English + Spanish
-- `README.md` inside `samples/` explaining how to run it
-- Sample is buildable standalone (`dotnet run` from its directory)
-- Sample is NOT included in the solution test run
-- DO NOT CHANGE THE LIBRARY. THE LIBRARY MUST WORK AS IS. USE RAZOR SYNTAX.
+- `README.md` inside `samples/` explaining how to run it and how to set up MoonBuggy in a new project
+- Sample is NOT included in the solution or test run
+- Uses `<UseRazorSourceGenerator>false</UseRazorSourceGenerator>` for legacy Razor pipeline (see Phase 16)
+- Uses `<Features>` property for interceptors (workaround for `<InterceptorsNamespaces>` not propagating with .NET 10 SDK + net8.0 target)
 
-**Why now:** Acts as a real-world integration test for the library. Shakes out bugs, missing features, or ergonomic issues before anything is packaged and published. Also provides the concrete app that benchmarks (Phase 12), docs (Phase 14), and packaging smoke tests (Phase 13) all reference.
+**Why now:** Acts as a real-world integration test for the library. Shakes out bugs, missing features, or ergonomic issues before anything is packaged and published. Also provides the concrete app that benchmarks (Phase 13), packaging smoke tests (Phase 14), and docs (Phase 15) all reference.
 
 ---
 
@@ -203,7 +203,7 @@ Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preser
 
 ## Phase 14: NuGet Packaging + CD Pipeline
 
-**Projects:** All `.csproj` files, `.github/workflows/release.yml` (new), `Directory.Build.props`
+**Projects:** All `.csproj` files, `MoonBuggy.SourceGenerator` (extend), `.github/workflows/release.yml` (new), `Directory.Build.props`
 
 **Deliverables:**
 
@@ -215,6 +215,13 @@ Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preser
 ### Source generator self-containment
 - Pack `MoonBuggy.Core.dll` + `Markdig.dll` into `analyzers/dotnet/cs/` folder
 - Ensure no runtime dependency leaks (consumer never sees Core or Markdig as transitive deps)
+
+### Consumer build integration (zero-config for common case)
+- **`build/intelligenthack.MoonBuggy.SourceGenerator.props`** — auto-sets `<Features>$(Features);InterceptorsNamespaces=MoonBuggy.Generated</Features>`. The standard `<InterceptorsNamespaces>` MSBuild property doesn't reliably propagate to the compiler across SDK/TFM combinations, so we pass it directly via `<Features>`.
+- **`build/intelligenthack.MoonBuggy.SourceGenerator.targets`** — auto-adds `<AdditionalFiles Include="locales/**/*.po" />` when `moonbuggy.config.json` exists in the project directory. Consumers with non-standard PO paths can override.
+- Both files packed into `buildTransitive/` in the NuGet package for automatic import by consumers (and transitive consumers).
+- **Generator emits `file class InterceptsLocationAttribute` polyfill** in its generated output — consumers no longer need a manual polyfill file. The `file` modifier scopes the definition to the generated file, avoiding conflicts with SDK-internal definitions or other generators.
+- After these changes, a consumer's `.csproj` only needs the two `PackageReference` lines — no manual `<Features>`, `<AdditionalFiles>`, or polyfill file.
 
 ### CLI tool packaging
 - `PackAsTool`, `ToolCommandName` already set — add metadata
@@ -228,9 +235,10 @@ Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preser
 
 ### Packaging smoke test
 - `dotnet pack` produces 3 .nupkg files
-- Switch sample project from ProjectReference to local .nupkg PackageReference
+- Switch sample project from DLL references to local .nupkg PackageReference
 - Verify sample builds and runs against packages (catches missing DLLs, wrong TFMs, broken analyzer loading)
-- Sample then reverts to ProjectReference for day-to-day development (the PackageReference test is CI-only or scripted)
+- Verify the `.props`/`.targets` auto-import works (no manual property setup in sample `.csproj`)
+- Sample then reverts to DLL references for day-to-day development (the PackageReference test is CI-only or scripted)
 
 **Why after sample+benchmarks:** The library is battle-tested by the sample app and performance-validated by benchmarks. Packaging is a mechanical step that wraps known-good code.
 
@@ -282,4 +290,30 @@ Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preser
 - Docs site content is written fresh for the site — not a copy of the GitHub markdown
 - GitHub docs are concise quick-reference; Docusaurus docs are detailed tutorials with examples
 - Code examples in the docs site pull from or reference the sample project
+
+---
+
+## Phase 16: Modern Razor Pipeline Compatibility
+
+**Projects:** `MoonBuggy.SourceGenerator` (extend or new approach), possibly new MSBuild targets
+
+**Problem:** The modern Razor source generator (`UseRazorSourceGenerator=true`, the default) runs in the same Roslyn compilation pass as MoonBuggy's generator. Because generators can't see each other's output, `GetInterceptableLocation()` returns null for syntax trees emitted by the Razor generator, making `_t()`/`_m()` calls in `.cshtml` files invisible to MoonBuggy's interceptor. The current workaround — `<UseRazorSourceGenerator>false</UseRazorSourceGenerator>` — forces the legacy Razor pipeline, which generates `.cshtml.g.cs` files as a pre-build MSBuild step. This works but has real downsides: slower incremental builds, no Razor hot reload, and it's a non-obvious requirement that surprises consumers.
+
+**Goal:** Eliminate the `UseRazorSourceGenerator=false` requirement so Razor projects work out of the box with the modern pipeline.
+
+**Research directions:**
+1. **MSBuild pre-compilation target** — Run a Razor pre-compilation step via MSBuild (before the main compilation) that emits `.cshtml.g.cs` files, then feed those to the MoonBuggy generator in the main pass. This automates what the legacy pipeline does without globally disabling the modern pipeline.
+2. **Two-pass compilation** — First pass discovers Razor call sites and generates interceptor source; second pass compiles everything. Investigate whether MSBuild/Roslyn support this without doubling build time.
+3. **Tag Helper alternative API** — Provide a `<t>` Tag Helper as an alternative to `_t()` in Razor. Tag Helpers are resolved at Razor compile time and don't need interceptors. This would be an additional API surface, not a replacement.
+4. **Roslyn generator ordering/chaining** — Monitor Roslyn proposals for generator dependencies or ordering. If Roslyn adds a way for generators to declare dependencies on other generators' output, MoonBuggy could declare a dependency on the Razor generator.
+5. **Razor source generator extensibility** — Investigate whether the modern Razor pipeline exposes hooks or extension points that could feed call-site information to MoonBuggy's generator.
+
+**Deliverables:**
+- Research spike documenting which approaches are viable
+- Implementation of the chosen approach
+- Remove `UseRazorSourceGenerator=false` from sample project
+- Update documentation to remove the legacy pipeline requirement
+- Tests confirming `_t()`/`_m()` in `.cshtml` files work with the modern Razor pipeline
+
+**Why last:** This is the hardest unsolved problem in MoonBuggy's consumer experience. It requires Roslyn/MSBuild research and may depend on future Roslyn features. All other phases can ship with the legacy pipeline workaround — this phase eliminates the workaround.
 

@@ -83,7 +83,7 @@ MB0001: non-constant first arg; MB0002: missing arg property; MB0003: extra arg 
 
 ## Implementation Phases
 
-The project follows a 15-phase build order where each phase depends on previous ones. See `docs/moonbuggy-implementation-phases.md` for details. Phases 1–11 are complete. Next: (12) Sample Project (net8.0), (13) Microbenchmarks, (14) NuGet + CD, (15) Docs Site.
+The project follows a 16-phase build order where each phase depends on previous ones. See `docs/moonbuggy-implementation-phases.md` for details. Phases 1–12 are complete. Next: (13) Microbenchmarks, (14) NuGet + CD (includes consumer build integration: `.props`/`.targets` auto-config, generator-emitted polyfill), (15) Docs Site, (16) Modern Razor Pipeline Compatibility (eliminate `UseRazorSourceGenerator=false` hack).
 
 ## Code Conventions
 

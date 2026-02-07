@@ -239,7 +239,12 @@ analyzers/
     MoonBuggy.SourceGenerator.dll
     MoonBuggy.Core.dll              # packed alongside
     Markdig.dll                       # packed alongside (needed by Core)
+buildTransitive/
+  intelligenthack.MoonBuggy.SourceGenerator.props   # auto-sets Features flag for interceptors
+  intelligenthack.MoonBuggy.SourceGenerator.targets  # auto-adds PO files as AdditionalFiles
 ```
+
+The `.props` file sets `<Features>$(Features);InterceptorsNamespaces=MoonBuggy.Generated</Features>` so consumers don't need manual compiler configuration. The `.targets` file adds `<AdditionalFiles Include="locales/**/*.po" />` when a `moonbuggy.config.json` exists. The generator also emits a `file class InterceptsLocationAttribute` polyfill, so consumers don't need to provide one.
 
 Uses `PrivateAssets="all"` + `OutputItemType="Analyzer"` on the consumer side.
 
@@ -270,11 +275,11 @@ Dotnet tool package.
 
 The following projects and structure are added in Phases 10–15. See [moonbuggy-implementation-phases.md](moonbuggy-implementation-phases.md) for full details.
 
-### `samples/MoonBuggy.Sample/` — Sample App [Phase 11]
+### `samples/MoonBuggy.Sample/` — Sample App [Phase 12]
 
-**Target:** `net10.0`
+**Target:** `net8.0`
 
-Minimal ASP.NET Razor Pages app demonstrating `_t()`, `_m()`, locale switching, and context disambiguation. References runtime + source generator via ProjectReference. Pre-populated PO files for `en` + `es`. Not included in solution test run.
+Minimal ASP.NET Razor Pages app demonstrating `_t()`, `_m()`, locale switching, and context disambiguation. References runtime DLL + source generator/core DLLs as analyzers (not ProjectReference — NuGet packages don't exist yet). Pre-populated PO files for `en` + `es`. Not included in solution or test run.
 
 ### `tests/MoonBuggy.Benchmarks/` — Microbenchmarks [Phase 12]
 
@@ -282,12 +287,14 @@ Minimal ASP.NET Razor Pages app demonstrating `_t()`, `_m()`, locale switching, 
 
 BenchmarkDotNet project measuring `TranslatedString.WriteTo`, `TranslatedHtml.WriteTo`, interceptor hot paths, and `ToString()` fallback. Not included in solution test run — run manually via `dotnet run -c Release`.
 
-### NuGet Packaging + CD [Phase 13]
+### NuGet Packaging + CD [Phase 14]
 
 - Single `Version` property in `Directory.Build.props`, overridable by CI
 - Standard package metadata (Authors, License, ProjectUrl, etc.) in `Directory.Build.props`
+- Consumer build integration: `.props`/`.targets` in `buildTransitive/` auto-configure interceptors, PO files, and polyfill
+- Source generator emits `file class InterceptsLocationAttribute` polyfill — no manual consumer file needed
 - `.github/workflows/release.yml` — CD pipeline triggered on GitHub Release creation (tag `v*`)
-- Packaging smoke test: build sample against local .nupkg to verify analyzer loading and TFM correctness
+- Packaging smoke test: build sample against local .nupkg to verify analyzer loading, auto-import, and TFM correctness
 
 ### User-facing Documentation [Phase 14]
 

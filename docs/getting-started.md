@@ -20,14 +20,9 @@ dotnet tool install intelligenthack.MoonBuggy.Cli
 
 ## 2. Configure your .csproj
 
-The source generator needs two things in your project file: the analyzer reference and the interceptors namespace.
+Add the MoonBuggy packages:
 
 ```xml
-<PropertyGroup>
-  <!-- Required: allow the source generator to emit interceptors -->
-  <InterceptorsNamespaces>$(InterceptorsNamespaces);MoonBuggy.Generated</InterceptorsNamespaces>
-</PropertyGroup>
-
 <ItemGroup>
   <PackageReference Include="intelligenthack.MoonBuggy" Version="1.0.0" />
   <PackageReference Include="intelligenthack.MoonBuggy.SourceGenerator" Version="1.0.0"
@@ -36,6 +31,22 @@ The source generator needs two things in your project file: the analyzer referen
 ```
 
 `PrivateAssets="all"` prevents the source generator from leaking into consumers. `OutputItemType="Analyzer"` tells the compiler to load it as an analyzer rather than a runtime dependency.
+
+The source generator package automatically configures the compiler interceptors feature flag, registers PO files for compilation, and provides the required `InterceptsLocationAttribute` polyfill. No manual property setup is needed.
+
+### Razor Pages / MVC projects
+
+If you use `_t()` or `_m()` in `.cshtml` files, add this property:
+
+```xml
+<PropertyGroup>
+  <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+</PropertyGroup>
+```
+
+This switches to the legacy Razor compilation pipeline, which emits `.cshtml.g.cs` files as a pre-build MSBuild step. This makes `_t()`/`_m()` calls in Razor views visible to the MoonBuggy source generator. The modern Razor source generator runs in the same compilation pass as MoonBuggy's generator, so they can't see each other's output.
+
+This is not needed if you only call `_t()`/`_m()` from `.cs` files (e.g., Minimal APIs, background services).
 
 ## 3. Create moonbuggy.config.json
 
@@ -130,6 +141,7 @@ The source generator reads your PO files and generates interceptor methods for e
 MoonBuggy stores the current locale in an `AsyncLocal`, so it's per-request and async-safe. Add middleware to set it:
 
 ```csharp
+using System.Globalization;
 using MoonBuggy;
 
 app.Use(async (context, next) =>

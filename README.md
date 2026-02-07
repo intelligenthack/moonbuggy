@@ -21,13 +21,9 @@ dotnet add package intelligenthack.MoonBuggy.SourceGenerator
 dotnet tool install intelligenthack.MoonBuggy.Cli
 ```
 
-Add to your `.csproj`:
+Create `moonbuggy.config.json`, write `_t()` calls in your views, run `moonbuggy extract`, translate the PO files, and build. The source generator package handles all compiler configuration automatically. See [Getting Started](docs/getting-started.md) for the full walkthrough.
 
-```xml
-<InterceptorsNamespaces>$(InterceptorsNamespaces);MoonBuggy.Generated</InterceptorsNamespaces>
-```
-
-Create `moonbuggy.config.json`, write `_t()` calls in your views, run `moonbuggy extract`, translate the PO files, and build. See [Getting Started](docs/getting-started.md) for the full walkthrough.
+> **Razor Pages / MVC:** If you use `_t()` or `_m()` in `.cshtml` files, add `<UseRazorSourceGenerator>false</UseRazorSourceGenerator>` to your `.csproj`. This switches to the legacy Razor compilation pipeline, which makes Razor call sites visible to the MoonBuggy source generator. See the [technical explanation](docs/getting-started.md#razor-pages--mvc-projects) for details.
 
 ## What it looks like
 
@@ -131,13 +127,17 @@ dotnet add package intelligenthack.MoonBuggy.SourceGenerator
 dotnet tool install intelligenthack.MoonBuggy.Cli
 ```
 
-The source generator must be referenced as an analyzer in your `.csproj` file:
+That's it. The source generator NuGet package auto-configures the compiler interceptors feature flag, registers PO files for compilation, and provides all required polyfills. No manual `.csproj` property setup is needed.
+
+For Razor Pages or MVC projects that use `_t()`/`_m()` in `.cshtml` files, add one property:
 
 ```xml
-<PackageReference Include="intelligenthack.MoonBuggy" Version="1.0.0" />
-<PackageReference Include="intelligenthack.MoonBuggy.SourceGenerator" Version="1.0.0"
-                  PrivateAssets="all" OutputItemType="Analyzer" />
+<PropertyGroup>
+  <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+</PropertyGroup>
 ```
+
+This is not needed if you only call `_t()`/`_m()` from `.cs` files.
 
 ## Setting the locale
 
