@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
-    <InterceptorsNamespaces>$(InterceptorsNamespaces);MoonBuggy.Generated</InterceptorsNamespaces>
+    <!-- Use Features directly — InterceptorsNamespaces MSBuild property
+         doesn't reliably propagate to /features: on net8.0 with .NET 10 SDK -->
+    <Features>$(Features);InterceptorsNamespaces=MoonBuggy.Generated</Features>
   </PropertyGroup>
 </Project>

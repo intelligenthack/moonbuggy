@@ -11,9 +11,10 @@
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.38.0" />
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.3.0" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="9.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MoonBuggy.Core\MoonBuggy.Core.csproj" />
+    <ProjectReference Include="..\MoonBuggy.Core\MoonBuggy.Core.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />

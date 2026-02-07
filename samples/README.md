@@ -4,40 +4,27 @@ A minimal ASP.NET Razor Pages app demonstrating MoonBuggy's i18n features.
 
 ## Using MoonBuggy in your own project
 
-### 1. Project configuration
-
-Add to your `.csproj`:
+### 1. Install the NuGet packages
 
 ```xml
-<PropertyGroup>
-  <!-- Enable the interceptors feature for the MoonBuggy namespace -->
-  <Features>$(Features);InterceptorsNamespaces=MoonBuggy.Generated</Features>
-
-  <!-- Required for Razor Pages/MVC: use the legacy Razor pipeline so the
-       MoonBuggy source generator can see _t()/_m() calls in .cshtml files -->
-  <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
-</PropertyGroup>
-
 <ItemGroup>
-  <!-- Reference the MoonBuggy NuGet packages -->
-  <PackageReference Include="intelligenthack.MoonBuggy" Version="..." />
-
-  <!-- Register PO files as additional files for the source generator -->
-  <AdditionalFiles Include="locales\**\*.po" />
+  <PackageReference Include="intelligenthack.MoonBuggy" Version="0.1.0" />
+  <PackageReference Include="intelligenthack.MoonBuggy.SourceGenerator" Version="0.1.0" />
 </ItemGroup>
 ```
 
-### 2. InterceptsLocation polyfill
+The source generator package automatically configures interceptors and includes PO files (when `moonbuggy.config.json` exists in your project directory).
 
-Add this file to your project (the NuGet package will provide this automatically in a future version):
+### 2. Razor Pages / MVC projects
 
-```csharp
-// InterceptsLocationAttribute.cs
-#pragma warning disable CS9113
-namespace System.Runtime.CompilerServices;
+For Razor Pages or MVC projects, add this to your `.csproj`:
 
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-public sealed class InterceptsLocationAttribute(int version, string data) : Attribute;
+```xml
+<PropertyGroup>
+  <!-- Use the legacy Razor pipeline so the MoonBuggy source generator
+       can see _t()/_m() calls in .cshtml files -->
+  <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+</PropertyGroup>
 ```
 
 ### 3. View imports
@@ -55,8 +42,8 @@ Set `I18n.Current.LCID` in your request pipeline — see `Program.cs` for an exa
 ## Running this sample
 
 ```bash
-# Build the main solution first (the sample references built DLLs)
-dotnet build
+# Pack the NuGet packages into ./artifacts (required once, or after code changes)
+dotnet pack -c Release -o ./artifacts
 
 # Then build and run the sample
 dotnet run --project samples/MoonBuggy.Sample --urls http://+:5050
@@ -64,15 +51,15 @@ dotnet run --project samples/MoonBuggy.Sample --urls http://+:5050
 
 Then open http://localhost:5050 in your browser.
 
-> **Note:** This sample references MoonBuggy via direct DLL references
-> (`<Reference>` and `<Analyzer>` items). In a real project you'd use the
-> NuGet packages instead.
+> **Note:** This sample uses a local NuGet feed (`samples/nuget.config`)
+> pointing to `./artifacts`. Run `dotnet pack` before building the sample.
 
 ## Technical notes
 
 - **Legacy Razor pipeline:** `<UseRazorSourceGenerator>false</UseRazorSourceGenerator>` forces the legacy Razor compilation pipeline, which emits `.cshtml.g.cs` files as a pre-build step. This makes `_t()`/`_m()` calls in Razor views visible to the MoonBuggy source generator. The modern Razor source generator runs in the same compilation pass as MoonBuggy's generator, so they can't see each other's output.
-- **Interceptors feature flag:** The `<Features>` property passes `/features:InterceptorsNamespaces=MoonBuggy.Generated` directly to the compiler. The standard `<InterceptorsNamespaces>` MSBuild property doesn't reliably propagate when targeting net8.0 with the .NET 10 SDK.
-- **InterceptsLocationAttribute:** Required by the Roslyn interceptors feature. The MoonBuggy generator emits `[InterceptsLocation]` attributes but does not define the attribute class itself.
+- **Interceptors feature flag:** Automatically configured by the `intelligenthack.MoonBuggy.SourceGenerator` package via its `.props` file.
+- **InterceptsLocationAttribute:** Automatically emitted by the source generator as a `file`-scoped class — no manual polyfill needed.
+- **PO file discovery:** Automatically configured by the source generator package's `.targets` file when `moonbuggy.config.json` exists.
 
 ## What it demonstrates
 
