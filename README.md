@@ -5,7 +5,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
-  <img src="docs/moonbuggy-wordmark.svg" alt="MoonBuggy" width="480">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/moonbuggy-wordmark-light.svg">
+    <img src="docs/moonbuggy-wordmark.svg" alt="MoonBuggy" width="360">
+  </picture>
 </p>
 
 MoonBuggy performs compile-time translation for .NET applications. You write Razor views in English using a lightweight translation syntax, send PO files to translators, and during the build the compiler embeds every translated string directly into the binary. There are no resource files, dictionary lookups, or per-request allocations involved. The application writes the correct language directly to the output stream.
