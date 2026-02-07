@@ -100,6 +100,8 @@ Tests for the extractor transforming markdown to indexed placeholders.
 ## 3. Runtime Output (`_t`)
 
 Tests for rendered output given source-locale strings and variable values.
+These are verified via source generator integration tests (inspecting generated code),
+since `_t()` throws `InvalidOperationException` without an active source generator.
 
 ### 3.1 Simple variables
 
@@ -141,6 +143,8 @@ Tests for rendered output given source-locale strings and variable values.
 ## 4. Runtime Output (`_m`)
 
 Tests for rendered HTML output from markdown messages.
+These are verified via source generator integration tests (inspecting generated code),
+since `_m()` throws `InvalidOperationException` without an active source generator.
 
 ### 4.1 Simple markdown
 
@@ -280,9 +284,9 @@ Tests for the pseudo-locale accent transform.
 | # | Input | Expected output | Rule |
 |---|-------|-----------------|------|
 | 6.2.1 | `"Hello world"` | `"Ḧëĺĺö ẅöŕĺḋ"` | Letters accented |
-| 6.2.2 | `"Page 42!"` | `"Påǵë 42!"` | Digits and punctuation preserved |
+| 6.2.2 | `"Page 42!"` | `"Ṕåǵë 42!"` | Digits and punctuation preserved |
 | 6.2.3 | `"Hi {name}"` | `"Ḧï {name}"` | ICU variables preserved |
-| 6.2.4 | `"Click <0>here</0>"` | `"Çĺïçḳ <0>ḧëŕë</0>"` | Placeholders preserved |
+| 6.2.4 | `"Click <0>here</0>"` | `"Ćĺïćḱ <0>ḧëŕë</0>"` | Placeholders preserved |
 
 ---
 

@@ -19,12 +19,15 @@ moonbuggy/
 │   ├── cldr/
 │   │   ├── plurals.json                    # Downloaded from Unicode CLDR
 │   │   └── generate-plural-rules.csx       # Script: JSON → generated C# in Core
+│   ├── MoonBuggy.CldrGen/                  # CLDR generation classes (netstandard2.0)
 │   └── GenerateCldr.targets                # MSBuild target wired into Core build
 ├── tests/
-│   ├── MoonBuggy.Tests/                   # Unit tests: runtime + core
+│   ├── MoonBuggy.Tests/                   # Unit tests: runtime library
+│   ├── MoonBuggy.Core.Tests/             # Unit tests: core parsing, ICU, PO, markdown, pseudo
+│   ├── MoonBuggy.CldrGen.Tests/          # Unit tests: CLDR generation
 │   ├── MoonBuggy.SourceGenerator.Tests/   # Integration tests: generated code
 │   └── MoonBuggy.Cli.Tests/              # Integration tests: extract + validate
-├── MoonBuggy.sln
+├── MoonBuggy.slnx
 ├── Directory.Build.props                   # Shared build properties
 └── README.md
 ```
@@ -49,11 +52,9 @@ moonbuggy/
 |------|-------------|
 | `I18n.cs` | Static class with `AsyncLocal<I18nContext>` and `MarkdownPipeline` property |
 | `I18nContext.cs` | Per-async-context state (LCID) |
-| `Translate.cs` | `_t()` and `_m()` with runtime fallback bodies |
+| `Translate.cs` | `_t()` and `_m()` — fail-fast bodies that throw `InvalidOperationException` |
 
-The fallback bodies in `Translate.cs` need to resolve MB syntax at runtime for when the source generator is not active. They reference `MoonBuggy.Core` for parsing.
-
-**References:** `MoonBuggy.Core` (project reference, internalized into this package)
+The method bodies throw `InvalidOperationException` when called without an active source generator interceptor, surfacing a clear error rather than silently falling back.
 
 ---
 
@@ -81,9 +82,7 @@ The fallback bodies in `Translate.cs` need to resolve MB syntax at runtime for w
 | `Po/PoCatalog.cs` | In-memory representation of a PO file (entries keyed by msgid + msgctxt) |
 | `Po/PoEntry.cs` | Single PO entry: msgid, msgstr, msgctxt, comments |
 
-**Note:** PO parsing implementation (build vs. use existing library) is deferred to the implementation phase.
-| `Plural/CldrPluralRules.generated.cs` | **Generated at library build time.** Per-locale methods: `int → plural category`. Zero-alloc, pure integer arithmetic (modulo checks). Generated from CLDR JSON data. |
-| `Plural/CldrPluralCategories.generated.cs` | **Generated at library build time.** Per-locale list of valid plural categories (for PO validation). |
+| `Plural/CldrPluralRuleConditions.generated.cs` | **Generated at build time.** Per-locale plural rule conditions as strings, used by the source generator to emit inline plural selection. Generated from CLDR JSON data via `build/cldr/generate-plural-rules.csx`. |
 | `Plural/PluralCategory.cs` | Enum: `Zero`, `One`, `Two`, `Few`, `Many`, `Other` |
 | `Pseudo/PseudoLocalizer.cs` | Accent transform for pseudolocalization |
 | `Config/MoonBuggyConfig.cs` | Reads/represents `moonbuggy.config.json` |
@@ -107,10 +106,9 @@ The fallback bodies in `Translate.cs` need to resolve MB syntax at runtime for w
 | File | Description |
 |------|-------------|
 | `MoonBuggyGenerator.cs` | `IIncrementalGenerator` entry point — discovers `_t()`/`_m()` call sites, reads PO files, emits interceptors |
-| `InterceptorEmitter.cs` | Generates interceptor methods: locale switch + `TextWriter.Write()` chains |
+| `InterceptorEmitter.cs` | Generates interceptor methods: locale switch + `string.Concat()` chains |
 | `CallSiteAnalyzer.cs` | Extracts constant string argument, anonymous type properties, call site location |
-| `Diagnostics.cs` | MB0001–MB0008 diagnostic descriptors |
-| `DiagnosticAnalyzer.cs` | Reports diagnostics for non-constant args, missing variables, empty messages, etc. |
+| `Diagnostics.cs` | MB0001–MB0008 diagnostic descriptors (diagnostics reported inline from generator) |
 
 ---
 
@@ -122,17 +120,15 @@ The fallback bodies in `Translate.cs` need to resolve MB syntax at runtime for w
 
 **Dependencies:**
 - `MoonBuggy.Core` (project reference)
-- `System.CommandLine` (or similar for CLI parsing)
 
 **Contents:**
 
 | File | Description |
 |------|-------------|
-| `Program.cs` | Entry point, command registration |
+| `Program.cs` | Entry point, command parsing, formatted output |
 | `Commands/ExtractCommand.cs` | `moonbuggy extract` — scans source files, extracts messages, updates PO files |
 | `Commands/ValidateCommand.cs` | `moonbuggy validate` — validates PO files for completeness and correctness |
 | `SourceScanner.cs` | Walks .cs/.cshtml files, finds `_t()`/`_m()` calls, extracts constant string arguments |
-| `ConsoleOutput.cs` | Formatted output (statistics table, progress) |
 
 ---
 
@@ -140,9 +136,17 @@ The fallback bodies in `Translate.cs` need to resolve MB syntax at runtime for w
 
 ### `tests/MoonBuggy.Tests/`
 
-Unit tests for the runtime library and core logic.
+Unit tests for the runtime library.
 
-**Target:** `net8.0`
+**Framework:** xUnit
+
+**Coverage areas:**
+- `_t()` / `_m()` fail-fast behavior (throws `InvalidOperationException`)
+- `I18n.Current` async context isolation
+
+### `tests/MoonBuggy.Core.Tests/`
+
+Unit tests for core logic (parsing, ICU, PO, markdown, pseudo, config).
 
 **Framework:** xUnit
 
@@ -153,18 +157,25 @@ Unit tests for the runtime library and core logic.
 - PO file reading and writing (round-trip)
 - Markdown → placeholder extraction
 - Placeholder mapping resolution
-- CLDR plural rule selection
 - Pseudolocalization accent transform
-- `_t()` / `_m()` runtime fallback behavior
-- `I18n.Current` async context isolation
+- Config file loading
+
+### `tests/MoonBuggy.CldrGen.Tests/`
+
+Unit tests for CLDR plural rule generation.
+
+**Framework:** xUnit
+
+**Coverage areas:**
+- CLDR rule parsing
+- Integer simplification
+- C# plural emitter code generation
 
 ### `tests/MoonBuggy.SourceGenerator.Tests/`
 
 Integration tests for the source generator.
 
-**Target:** `net8.0`
-
-**Framework:** xUnit + `Microsoft.CodeAnalysis.CSharp.Analyzer.Testing` (or CSharpGeneratorTest)
+**Framework:** xUnit
 
 **Coverage areas:**
 - Interceptor generation for each message type
@@ -173,19 +184,18 @@ Integration tests for the source generator.
 - Fallback when PO translation is missing
 - Plural code generation with CLDR rules
 - Markdown placeholder resolution in generated code
+- Pseudolocalization integration
 
 ### `tests/MoonBuggy.Cli.Tests/`
 
 Integration tests for the CLI.
 
-**Target:** `net8.0`
-
 **Framework:** xUnit
 
 **Coverage areas:**
 - Extract command: new entries, preserved translations, `--clean`
-- Validate command: completeness checks, `--strict`
-- Config file loading
+- Validate command: completeness checks, `--strict`, `--locale`, `--verbose`
+- Source scanner regex extraction
 - Statistics output format
 
 ---
