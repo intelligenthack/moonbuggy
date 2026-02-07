@@ -136,8 +136,26 @@ Each phase produces testable output. Later phases depend on earlier ones.
 **Why first:** Multi-targeting directly affects NuGet package structure. DiagnosticAnalyzer improves the development experience before we put it in front of users. CLI flags complete the CLI surface before documenting it.
 
 ---
+## Phase 11: GitHub Documentation
 
-## Phase 11: Sample Project
+**Projects:** `README.md` (update), `docs/` markdown files
+
+**Deliverables:**
+- **README.md** refresh:
+  - Add badges (CI status, NuGet version, license)
+  - Add "Quick Start" section with 3-step install + configure + use
+- **`docs/getting-started.md`** — step-by-step setup for a new project
+- **`docs/syntax-reference.md`** — consolidate variable, plural, markdown, escaping syntax (extracted from the spec into a user-facing format)
+- **`docs/cli-reference.md`** — `extract` and `validate` commands with all flags
+- **`docs/configuration.md`** — `moonbuggy.config.json` format, MSBuild properties, locale setup
+- **CONTRIBUTING.md** update — reference the sample project, build instructions
+
+**Key principle:** GitHub docs are concise and practical. They answer "how do I use this?" Not "how does it work internally?" — that's for the docs site.
+
+Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preserved as internal reference. The new user-facing docs are a separate layer.
+
+---
+## Phase 12: Sample Project
 
 **Projects:** `samples/MoonBuggy.Sample/` (new Razor Pages app)
 
@@ -159,7 +177,7 @@ Each phase produces testable output. Later phases depend on earlier ones.
 
 ---
 
-## Phase 12: Microbenchmarks
+## Phase 13: Microbenchmarks
 
 **Projects:** `tests/MoonBuggy.Benchmarks/` (new), update docs
 
@@ -183,7 +201,7 @@ Each phase produces testable output. Later phases depend on earlier ones.
 
 ---
 
-## Phase 13: NuGet Packaging + CD Pipeline
+## Phase 14: NuGet Packaging + CD Pipeline
 
 **Projects:** All `.csproj` files, `.github/workflows/release.yml` (new), `Directory.Build.props`
 
@@ -215,30 +233,6 @@ Each phase produces testable output. Later phases depend on earlier ones.
 - Sample then reverts to ProjectReference for day-to-day development (the PackageReference test is CI-only or scripted)
 
 **Why after sample+benchmarks:** The library is battle-tested by the sample app and performance-validated by benchmarks. Packaging is a mechanical step that wraps known-good code.
-
----
-
-## Phase 14: GitHub Documentation
-
-**Projects:** `README.md` (update), `docs/` markdown files
-
-**Deliverables:**
-- **README.md** refresh:
-  - Add badges (CI status, NuGet version, license)
-  - Add "Quick Start" section with 3-step install + configure + use
-  - Link to sample project
-  - Link to docs site (placeholder until Phase 15)
-  - Add benchmark highlights (from Phase 12 results)
-- **`docs/getting-started.md`** — step-by-step setup for a new project
-- **`docs/syntax-reference.md`** — consolidate variable, plural, markdown, escaping syntax (extracted from the spec into a user-facing format)
-- **`docs/cli-reference.md`** — `extract` and `validate` commands with all flags
-- **`docs/configuration.md`** — `moonbuggy.config.json` format, MSBuild properties, locale setup
-- **`docs/lingui-coexistence.md`** — how to share PO files with Lingui.js
-- **CONTRIBUTING.md** update — reference the sample project, build instructions
-
-**Key principle:** GitHub docs are concise and practical. They answer "how do I use this?" Not "how does it work internally?" — that's for the docs site.
-
-Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preserved as internal reference. The new user-facing docs are a separate layer.
 
 ---
 
@@ -289,40 +283,3 @@ Existing docs (`moonbuggy-spec.md`, `moonbuggy-api-surface.md`, etc.) are preser
 - GitHub docs are concise quick-reference; Docusaurus docs are detailed tutorials with examples
 - Code examples in the docs site pull from or reference the sample project
 
----
-
-## Dependency Graph
-
-```
-Phase 10 (Polish)
-    ↓
-Phase 11 (Sample App)     ← integration test for the library, uses ProjectReference
-    ↓
-Phase 12 (Benchmarks)     ← may feed fixes back; sample validates fixes work end-to-end
-    ↓
-Phase 13 (NuGet + CD)     ← switches sample to PackageReference as packaging smoke test
-    ↓
-Phase 14 (GitHub Docs)    ← references sample, real NuGet commands, benchmark results
-    ↓
-Phase 15 (Docs Site)      ← comprehensive, benefits from everything above being stable
-```
-
-## Summary Table
-
-| Phase | Name | Depends On | Key Output |
-|-------|------|-----------|------------|
-| 1 | MB Parser + ICU Transformer | — | Tokenizer, ICU conversion |
-| 2 | PO File Handling | 1 | PoReader/PoWriter/PoCatalog |
-| 3 | CLI Extract (`_t()`) | 1, 2 | End-to-end PO extraction |
-| 4 | Markdown Placeholders | 3 | `_m()` extraction via Markdig |
-| 5 | CLDR Plural Rules | — | Generated plural category methods |
-| 6 | Runtime Library | 1, 5 | `I18n`, `Translate._t()`/`_m()` |
-| 7 | Source Generator | 1–6 | Interceptor emission, zero-alloc rendering |
-| 8 | CLI Validate | 2, 5 | PO validation command |
-| 9 | Pseudolocalization | 7 | Accent transforms, pseudo-locale |
-| 10 | Initial Polish | 1–9 | Multi-target TFMs, DiagnosticAnalyzer, CLI flags |
-| 11 | Sample Project | 10 | Razor Pages app — integration test |
-| 12 | Microbenchmarks | 11 | BenchmarkDotNet project, results doc |
-| 13 | NuGet + CD | 12 | 3 NuGet packages, GitHub Actions release workflow |
-| 14 | GitHub Docs | 13 | User-facing markdown docs, README refresh |
-| 15 | Docs Site | 14 | Docusaurus site on GitHub Pages |

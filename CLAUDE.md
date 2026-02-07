@@ -9,10 +9,15 @@ MoonBuggy is a .NET i18n library (`intelligenthack/moonbuggy`) that co-exists wi
 ## Build Commands
 
 ```bash
-dotnet build                          # Build entire solution
-dotnet test                           # Run all tests
-dotnet test tests/MoonBuggy.Tests     # Run unit tests only
-dotnet test --filter "FullyQualifiedName~TestName"  # Run a single test
+dotnet build                                          # Build entire solution
+dotnet test                                           # Run all tests (~293 tests)
+dotnet test tests/MoonBuggy.Tests                     # Runtime library tests (22)
+dotnet test tests/MoonBuggy.Core.Tests                # Core tests (134)
+dotnet test tests/MoonBuggy.CldrGen.Tests             # CLDR generation tests (33)
+dotnet test tests/MoonBuggy.Cli.Tests                 # CLI integration tests (41)
+dotnet test tests/MoonBuggy.SourceGenerator.Tests     # Source generator tests (63)
+dotnet test --filter "FullyQualifiedName~TestName"    # Run a single test
+dotnet test --filter "FullyQualifiedName~A|FullyQualifiedName~B"  # Multiple (| = OR)
 ```
 
 The CLI tool is invoked as `moonbuggy extract` / `moonbuggy validate` (installed via `dotnet tool install`).
@@ -20,25 +25,26 @@ The CLI tool is invoked as `moonbuggy extract` / `moonbuggy validate` (installed
 ## Solution Layout
 
 ```
-src/MoonBuggy/                  # Runtime library (net8.0) — NuGet: intelligenthack.MoonBuggy
+src/MoonBuggy/                  # Runtime library (net8.0;net10.0) — NuGet: intelligenthack.MoonBuggy
 src/MoonBuggy.Core/             # Shared internals (netstandard2.0) — NOT a standalone package
-src/MoonBuggy.SourceGenerator/  # Roslyn source generator (netstandard2.0)
-src/MoonBuggy.Cli/              # CLI tool (net8.0) — dotnet tool
-tests/MoonBuggy.Tests/          # Unit tests: runtime library (xUnit)
-tests/MoonBuggy.Core.Tests/     # Unit tests: core parsing, ICU, PO, markdown, pseudo
-tests/MoonBuggy.CldrGen.Tests/  # Unit tests: CLDR generation
+src/MoonBuggy.SourceGenerator/  # Roslyn source generator + DiagnosticAnalyzer (netstandard2.0)
+src/MoonBuggy.Cli/              # CLI tool (net8.0;net10.0) — dotnet tool
+tests/MoonBuggy.Tests/          # Unit tests: runtime library (xUnit, net10.0)
+tests/MoonBuggy.Core.Tests/     # Unit tests: core (subfolders: Config/ Icu/ Markdown/ Parsing/ Po/ Pseudo/)
+tests/MoonBuggy.CldrGen.Tests/  # Unit tests: CLDR generation (subfolder: Plural/)
 tests/MoonBuggy.SourceGenerator.Tests/  # Source generator integration tests
 tests/MoonBuggy.Cli.Tests/      # CLI integration tests
-build/cldr/                     # CLDR plural rules download + codegen script
-build/MoonBuggy.CldrGen/        # CLDR generation classes (netstandard2.0, standalone)
+build/cldr/                     # CLDR plural rules download + codegen script (.csx)
+build/MoonBuggy.CldrGen/        # CLDR generation classes (netstandard2.0, standalone, no Core dep)
 ```
 
 ## Architecture
 
 ### Target Framework Constraints
 - **MoonBuggy.Core** and **MoonBuggy.SourceGenerator** MUST target `netstandard2.0` — Roslyn requires this for analyzers/generators.
-- **MoonBuggy** runtime and **MoonBuggy.Cli** target `net8.0` (interceptors require .NET 8+).
-- The SourceGenerator NuGet package must be self-contained: Core and Markdig DLLs packed into `analyzers/dotnet/cs/`.
+- **MoonBuggy** runtime and **MoonBuggy.Cli** multi-target `net8.0;net10.0` (interceptors require .NET 8+).
+- The SourceGenerator NuGet package must be self-contained: Core, Markdig, System.Text.Json, and System.Text.Encodings.Web DLLs packed into `analyzers/dotnet/cs/` via `GetDependencyTargetPaths` MSBuild target.
+- Sample projects target `net8.0`.
 
 ### Core Processing Pipeline
 1. **MbParser** tokenizes the custom `$var$` / `$...|...$` / `#var#` syntax from C# source
@@ -77,7 +83,29 @@ MB0001: non-constant first arg; MB0002: missing arg property; MB0003: extra arg 
 
 ## Implementation Phases
 
-The project follows a 15-phase build order where each phase depends on previous ones. See `docs/moonbuggy-implementation-phases.md` for details. Phases 1–9 (core library) are complete. Remaining: (10) Initial Polish — DiagnosticAnalyzer, CLI flags, multi-target `net8.0;net10.0`, (11) Sample Project, (12) Microbenchmarks, (13) NuGet + CD, (14) GitHub Docs, (15) Docs Site.
+The project follows a 15-phase build order where each phase depends on previous ones. See `docs/moonbuggy-implementation-phases.md` for details. Phases 1–11 are complete. Next: (12) Sample Project (net8.0), (13) Microbenchmarks, (14) NuGet + CD, (15) Docs Site.
+
+## Code Conventions
+
+From `Directory.Build.props`: `LangVersion=latest`, `Nullable=enable`, `TreatWarningsAsErrors=true`, `ImplicitUsings=enable`.
+
+Test projects require explicit `global using Xunit;` in `GlobalUsings.cs` — ImplicitUsings doesn't cover xUnit.
+
+## Gotchas
+
+- **netstandard2.0 polyfills**: Core needs `IsExternalInit` polyfill for records. Auto-generated files need explicit `#nullable enable` (CS8669). `switch` on struct with static readonly fields fails (CS9135) — use if/else.
+- **Interceptor consumers need**: `<InterceptorsNamespaces>$(InterceptorsNamespaces);MoonBuggy.Generated</InterceptorsNamespaces>`.
+- **Generator emits `file class InterceptsLocationAttribute`** polyfill — consumers don't need the runtime attribute.
+- **`PreScanForPipe`**: MbParser uses this to solve ambiguity between `$var$` and `$...|...$` plural blocks.
+- **Markdig strips trailing whitespace** from paragraphs — preserve spaces at segment boundaries.
+- **LCID values**: `CultureInfo.GetCultureInfo("en").LCID` = 9 (neutral, not 1033); `"es"` = 10 (not 1034). Pseudo-locale LCID = 4096 (0x1000).
+- **xUnit `--filter`**: Uses `|` for OR, not the word `or`.
+- **`.csx` scripts**: `using var` not supported at top level — use `var` only.
+- **CLDR regen**: Must `dotnet build build/MoonBuggy.CldrGen` before running the `.csx` script.
+- **Core `InternalsVisibleTo`** → `MoonBuggy.Core.Tests`, `MoonBuggy`, `MoonBuggy.SourceGenerator`, `MoonBuggy.Cli`.
+- **Source generator reads MSBuild properties** via `context.AnalyzerConfigOptionsProvider` → `build_property.PropertyName`. Testing requires custom `AnalyzerConfigOptionsProvider` impl.
+- **`PluralBlockToken.SelectorVariable`** (not `.Variable`) for plural variable name.
+- **DiagnosticAnalyzer** reports MB0001–MB0009 in real-time but does NOT report PO-dependent diagnostics (MB0004, MB0006).
 
 ## Key Design Decisions
 
@@ -85,6 +113,8 @@ The project follows a 15-phase build order where each phase depends on previous 
 - Pseudolocalization is a compile-time switch (`MoonBuggyPseudoLocale` MSBuild property) — zero overhead when off.
 - Configuration lives in `moonbuggy.config.json` (shared with Lingui.js) and `.csproj` properties (build-only).
 - Test framework is **xUnit**. Source generator tests use `Microsoft.CodeAnalysis.CSharp.Analyzer.Testing`.
+- CLDR generation classes (CldrRuleParser, IntegerSimplifier, CSharpPluralEmitter) live in standalone `MoonBuggy.CldrGen` project — `.csx` script references via `#r`.
+- `CldrPluralRuleConditions.generated.cs` is the only generated CLDR file (conditions as strings for source generator).
 
 ## Reference Documents
 

@@ -22,15 +22,57 @@ Thank you for your interest in contributing to MoonBuggy!
 
 ## Development Setup
 
+### Prerequisites
+
+- .NET 8 SDK or later
+
+### Build and test
+
 ```bash
 dotnet build    # Build the solution
-dotnet test     # Run all tests
+dotnet test     # Run all tests (~293 tests across 5 projects)
 ```
+
+### Solution structure
+
+```
+src/MoonBuggy/                  # Runtime library (net8.0;net10.0)
+src/MoonBuggy.Core/             # Shared internals (netstandard2.0)
+src/MoonBuggy.SourceGenerator/  # Roslyn source generator + analyzer (netstandard2.0)
+src/MoonBuggy.Cli/              # CLI tool (net8.0;net10.0)
+tests/                          # xUnit test projects mirroring src/
+build/cldr/                     # CLDR plural rules codegen
+```
+
+### Running specific test suites
+
+```bash
+dotnet test tests/MoonBuggy.Core.Tests              # Core parsing, ICU, PO, markdown
+dotnet test tests/MoonBuggy.SourceGenerator.Tests    # Source generator integration
+dotnet test tests/MoonBuggy.Cli.Tests                # CLI integration
+dotnet test --filter "FullyQualifiedName~TestName"   # Single test
+```
+
+### CLDR plural rules
+
+Plural rule conditions are generated C# code checked into the repo. To regenerate after a CLDR version upgrade:
+
+```bash
+dotnet build build/MoonBuggy.CldrGen
+dotnet script build/cldr/generate-plural-rules.csx
+```
+
+### Key constraints
+
+- **MoonBuggy.Core** and **MoonBuggy.SourceGenerator** must target `netstandard2.0` (Roslyn requirement for analyzers/generators).
+- The source generator package must be self-contained: Core and Markdig DLLs are packed into `analyzers/dotnet/cs/`.
+- `TreatWarningsAsErrors` is enabled solution-wide.
 
 ## Code Style
 
 - Follow existing conventions in the codebase.
 - Keep changes focused — one concern per PR.
+- The solution uses `LangVersion=latest`, `Nullable=enable`, and `ImplicitUsings=enable`.
 
 ## License
 

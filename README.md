@@ -1,5 +1,9 @@
 # MoonBuggy
 
+[![CI](https://github.com/intelligenthack/moonbuggy/actions/workflows/ci.yml/badge.svg)](https://github.com/intelligenthack/moonbuggy/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/intelligenthack.MoonBuggy.svg)](https://www.nuget.org/packages/intelligenthack.MoonBuggy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 <p align="center">
   <img src="docs/moonbuggy.jpg" alt="Lunar Roving Vehicle" width="480"><br>
   <sub>August 1, 1971. Courtesy NASA.</sub>
@@ -8,6 +12,22 @@
 MoonBuggy performs compile-time translation for .NET applications. You write Razor views in English using a lightweight translation syntax, send PO files to translators, and during the build the compiler embeds every translated string directly into the binary. There are no resource files, dictionary lookups, or per-request allocations involved. The application writes the correct language directly to the output stream.
 
 If your stack includes both Razor views and a JavaScript frontend, MoonBuggy can share PO files with Lingui.js. This allows you to maintain a single set of translation files for both server and client.
+
+## Quick Start
+
+```bash
+dotnet add package intelligenthack.MoonBuggy
+dotnet add package intelligenthack.MoonBuggy.SourceGenerator
+dotnet tool install intelligenthack.MoonBuggy.Cli
+```
+
+Add to your `.csproj`:
+
+```xml
+<InterceptorsNamespaces>$(InterceptorsNamespaces);MoonBuggy.Generated</InterceptorsNamespaces>
+```
+
+Create `moonbuggy.config.json`, write `_t()` calls in your views, run `moonbuggy extract`, translate the PO files, and build. See [Getting Started](docs/getting-started.md) for the full walkthrough.
 
 ## What it looks like
 
@@ -201,6 +221,13 @@ When the same English text needs different translations depending on where it ap
 ```
 
 These become separate PO entries with different `msgctxt` values, so translators can provide distinct translations for each.
+
+## Documentation
+
+- [Getting Started](docs/getting-started.md) — step-by-step setup for a new project
+- [Syntax Reference](docs/syntax-reference.md) — variables, plurals, markdown, escaping
+- [CLI Reference](docs/cli-reference.md) — `extract` and `validate` commands
+- [Configuration](docs/configuration.md) — config file, MSBuild properties, Lingui.js co-existence
 
 ## License
 

@@ -11,10 +11,10 @@ See [moonbuggy-spec.md](moonbuggy-spec.md) for design rationale, [moonbuggy-api-
 ```
 moonbuggy/
 ├── src/
-│   ├── MoonBuggy/                         # NuGet: intelligenthack.MoonBuggy
-│   ├── MoonBuggy.Core/                    # Internal shared library (not shipped alone)
-│   ├── MoonBuggy.SourceGenerator/         # NuGet: intelligenthack.MoonBuggy.SourceGenerator
-│   └── MoonBuggy.Cli/                     # NuGet: intelligenthack.MoonBuggy.Cli (dotnet tool)
+│   ├── MoonBuggy/                          # NuGet: intelligenthack.MoonBuggy
+│   ├── MoonBuggy.Core/                     # Internal shared library (not shipped alone)
+│   ├── MoonBuggy.SourceGenerator/          # NuGet: intelligenthack.MoonBuggy.SourceGenerator
+│   └── MoonBuggy.Cli/                      # NuGet: intelligenthack.MoonBuggy.Cli (dotnet tool)
 ├── build/
 │   ├── cldr/
 │   │   ├── plurals.json                    # Downloaded from Unicode CLDR
@@ -22,14 +22,14 @@ moonbuggy/
 │   ├── MoonBuggy.CldrGen/                  # CLDR generation classes (netstandard2.0)
 │   └── GenerateCldr.targets                # MSBuild target wired into Core build
 ├── tests/
-│   ├── MoonBuggy.Tests/                   # Unit tests: runtime library
-│   ├── MoonBuggy.Core.Tests/             # Unit tests: core parsing, ICU, PO, markdown, pseudo
-│   ├── MoonBuggy.CldrGen.Tests/          # Unit tests: CLDR generation
-│   ├── MoonBuggy.SourceGenerator.Tests/   # Integration tests: generated code
-│   ├── MoonBuggy.Cli.Tests/              # Integration tests: extract + validate
-│   └── MoonBuggy.Benchmarks/             # [Phase 12] BenchmarkDotNet microbenchmarks (not in test run)
+│   ├── MoonBuggy.Tests/                    # Unit tests: runtime library
+│   ├── MoonBuggy.Core.Tests/               # Unit tests: core parsing, ICU, PO, markdown, pseudo
+│   ├── MoonBuggy.CldrGen.Tests/            # Unit tests: CLDR generation
+│   ├── MoonBuggy.SourceGenerator.Tests/    # Integration tests: generated code
+│   ├── MoonBuggy.Cli.Tests/                # Integration tests: extract + validate
+│   └── MoonBuggy.Benchmarks/               # [Phase 12] BenchmarkDotNet microbenchmarks (not in test run)
 ├── samples/
-│   └── MoonBuggy.Sample/                  # [Phase 11] Razor Pages demo app (not in solution test run)
+│   └── MoonBuggy.Sample/                   # [Phase 11] Razor demo app (not in solution test run)
 ├── docs/                                   # Internal reference docs (spec, API, test cases, phases)
 ├── docs-site/                              # [Phase 15] Docusaurus documentation site
 ├── .github/
