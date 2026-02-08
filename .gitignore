@@ -30,3 +30,8 @@ TestResults/
 ## Windows Zone.Identifier metadata
 *:Zone.Identifier
 BenchmarkDotNet.Artifacts/*
+
+## Docusaurus
+docs-site/node_modules/
+docs-site/build/
+docs-site/.docusaurus/

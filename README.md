@@ -226,10 +226,10 @@ These become separate PO entries with different `msgctxt` values, so translators
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) — step-by-step setup for a new project
-- [Syntax Reference](docs/syntax-reference.md) — variables, plurals, markdown, escaping
-- [CLI Reference](docs/cli-reference.md) — `extract` and `validate` commands
-- [Configuration](docs/configuration.md) — config file, MSBuild properties, Lingui.js co-existence
+- [Getting Started](https://intelligenthack.github.io/moonbuggy/docs/getting-started) — step-by-step setup for a new project
+- [Syntax Reference](https://intelligenthack.github.io/moonbuggy/docs/guides/syntax-reference) — variables, plurals, markdown, escaping
+- [CLI Reference](https://intelligenthack.github.io/moonbuggy/docs/api/cli-reference) — `extract` and `validate` commands
+- [Configuration](https://intelligenthack.github.io/moonbuggy/docs/api/configuration) — config file, MSBuild properties, Lingui.js co-existence
 
 ## License
 

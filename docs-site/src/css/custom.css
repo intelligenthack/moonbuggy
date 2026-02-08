@@ -1,0 +1,134 @@
+:root {
+  --ifm-color-primary: #213041;
+  --ifm-color-primary-dark: #1c2938;
+  --ifm-color-primary-darker: #1a2734;
+  --ifm-color-primary-darkest: #15202b;
+  --ifm-color-primary-light: #26374a;
+  --ifm-color-primary-lighter: #283b4e;
+  --ifm-color-primary-lightest: #2f4660;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #7eb8da;
+  --ifm-color-primary-dark: #64aad2;
+  --ifm-color-primary-darker: #57a3ce;
+  --ifm-color-primary-darkest: #358dbe;
+  --ifm-color-primary-light: #98c6e2;
+  --ifm-color-primary-lighter: #a5cde6;
+  --ifm-color-primary-lightest: #c9e1f0;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Hero section */
+.hero-section {
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.hero-section .hero__title {
+  font-size: 2rem;
+  margin-top: 1.5rem;
+}
+
+.hero-section .hero__subtitle {
+  font-size: 1.2rem;
+  color: var(--ifm-color-emphasis-700);
+  max-width: 600px;
+  margin: 0.5rem auto 2rem;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hero-wordmark {
+  max-width: 360px;
+  width: 100%;
+}
+
+/* Features section */
+.features-section {
+  padding: 4rem 0;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-card {
+  padding: 1.5rem;
+}
+
+.feature-card h3 {
+  margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+  color: var(--ifm-color-emphasis-700);
+  margin: 0;
+}
+
+/* Code example section */
+.code-section {
+  padding: 4rem 0;
+  background: var(--ifm-color-emphasis-100);
+}
+
+[data-theme='dark'] .code-section {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.code-section h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.code-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .code-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.code-column h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Install section */
+.install-section {
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.install-section h2 {
+  margin-bottom: 1.5rem;
+}
+
+.install-section pre {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: left;
+}
