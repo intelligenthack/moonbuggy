@@ -1,6 +1,6 @@
 # MoonBuggy
 
-![MoonBuggy](https://raw.githubusercontent.com/intelligenthack/moonbuggy/main/docs/moonbuggy-wordmark.svg)
+![MoonBuggy](https://raw.githubusercontent.com/intelligenthack/moonbuggy/main/docs/moonbuggy-wordmark-sm.svg)
 
 MoonBuggy performs compile-time translation for .NET applications. You write Razor views in English using a lightweight translation syntax, send PO files to translators, and during the build the compiler embeds every translated string directly into the binary. There are no resource files, dictionary lookups, or per-request allocations involved. The application writes the correct language directly to the output stream.
 
