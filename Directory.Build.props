@@ -10,11 +10,11 @@
     <Authors>Marco Cecconi</Authors>
     <Company>IntelligentHack</Company>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/intelligenthack/moonbuggy</PackageProjectUrl>
+    <PackageProjectUrl>https://intelligenthack.github.io/moonbuggy/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/intelligenthack/moonbuggy</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>moonbuggy-icon.png</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>NUGET_README.md</PackageReadmeFile>
     <PackageTags>i18n;localization;translation;source-generator;po;icu;messageformat</PackageTags>
     <Copyright>Copyright (c) 2026 Marco Cecconi</Copyright>
   </PropertyGroup>
